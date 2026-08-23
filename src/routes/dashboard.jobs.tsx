@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Search, MapPin, DollarSign, Filter, Building2, Bookmark } from "lucide-react";
 
+import { getDailyJobs } from "../lib/job-fetcher";
+
 export const Route = createFileRoute("/dashboard/jobs")({
   head: () => ({
     meta: [
@@ -10,19 +12,13 @@ export const Route = createFileRoute("/dashboard/jobs")({
       { property: "og:description", content: "Personalized job matches." },
     ],
   }),
+  loader: async () => await getDailyJobs(),
   component: JobsPage,
 });
 
-const jobs = [
-  { c: "Google", role: "SDE Intern", loc: "Bengaluru", salary: "₹1.2L / mo", match: 96, skills: ["React", "TypeScript", "DSA"] },
-  { c: "Microsoft", role: "SWE Intern", loc: "Hyderabad", salary: "₹1.1L / mo", match: 91, skills: ["C#", "Azure", "System Design"] },
-  { c: "Stripe", role: "Frontend Engineer", loc: "Remote", salary: "$60k", match: 88, skills: ["React", "GraphQL", "UI"] },
-  { c: "Razorpay", role: "Backend Engineer", loc: "Bengaluru", salary: "₹18 LPA", match: 84, skills: ["Node", "SQL", "AWS"] },
-  { c: "Flipkart", role: "APM", loc: "Bengaluru", salary: "₹22 LPA", match: 79, skills: ["PM", "SQL", "Analytics"] },
-  { c: "Zomato", role: "Data Analyst", loc: "Gurgaon", salary: "₹12 LPA", match: 76, skills: ["SQL", "Python", "Tableau"] },
-];
-
 function JobsPage() {
+  const jobs = Route.useLoaderData();
+  
   return (
     <div className="space-y-6">
       <div>
@@ -45,8 +41,8 @@ function JobsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {jobs.map((j) => (
-          <div key={j.c + j.role} className="rounded-2xl p-6 glass transition-transform hover:-translate-y-1">
+        {jobs?.map((j, i) => (
+          <div key={j.c + j.role + i} className="rounded-2xl p-6 glass transition-transform hover:-translate-y-1">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-xl gradient-brand text-white">
