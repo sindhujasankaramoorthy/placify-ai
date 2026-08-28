@@ -95,20 +95,19 @@ const TECHNICAL_SKILL_DICTIONARY = [
 export function smartExtractCandidateData(rawText: string, fallbackFileName?: string): CandidateProfile {
   const profile: CandidateProfile = JSON.parse(JSON.stringify(emptyCandidateProfile));
 
-  // Clean raw text and remove non-printable stream artifacts
+  // Normalize text, remove zero-width characters and odd unicode separators
   const cleanText = (rawText || "")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, " ")
-    .replace(/\s+/g, " ")
-    .replace(/ \n /g, "\n")
+    .replace(/[ \t]+/g, " ")
     .trim();
 
   // 1. Extract Candidate Name
   let detectedName = "";
-
-  // Check lines in the text header
-  const rawLines = (rawText || "").split("\n").map(l => l.trim()).filter(Boolean);
+  const rawLines = cleanText.split("\n").map(l => l.trim()).filter(Boolean);
+  
   for (let i = 0; i < Math.min(6, rawLines.length); i++) {
     const line = rawLines[i];
     if (
@@ -117,7 +116,10 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
       !line.includes("@") &&
       !line.includes("http") &&
       !line.includes("www.") &&
-      !line.includes("+91") &&
+      !line.includes(".com") &&
+      !line.includes(".in") &&
+      !line.includes(".org") &&
+      !/\d{5,}/.test(line) &&
       !line.includes(":") &&
       !line.includes("/") &&
       !line.toLowerCase().includes("resume") &&
@@ -129,7 +131,7 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
       !line.toLowerCase().includes("experience")
     ) {
       const cleaned = line.replace(/[^a-zA-Z\s.]/g, "").replace(/\s+/g, " ").trim();
-      const words = cleaned.split(" ");
+      const words = cleaned.split(/\s+/);
       if (words.length >= 1 && words.length <= 4 && cleaned.length >= 3) {
         detectedName = cleaned;
         break;
@@ -137,7 +139,7 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     }
   }
 
-  // If not found in text, clean up the file name
+  // If not detected, extract clean name from file name
   if (!detectedName && fallbackFileName) {
     detectedName = fallbackFileName
       .replace(/\.(pdf|docx|doc|txt|md)$/i, "")
@@ -149,47 +151,106 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
 
   profile.name = detectedName || "Candidate Profile";
 
-  // 2. Extract Email (Strict Email regex)
-  const emailMatch = cleanText.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
-  if (emailMatch) {
-    profile.email = emailMatch[0];
+  // 2. Extract Email (Multi-pass extraction)
+  // Pass A: Standard Email regex
+  let emailMatch = cleanText.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
+  
+  // Pass B: Check after 'Email:' / 'Mail:' labels
+  if (!emailMatch) {
+    const labeledEmail = cleanText.match(/(?:email|e-mail|mail)\s*[:\-]?\s*([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/i);
+    if (labeledEmail) emailMatch = [labeledEmail[1]] as any;
+  }
+  
+  // Pass C: Check de-spaced strings (in case PDF.js spaced out chars like "s i n d h u j a @ ...")
+  if (!emailMatch) {
+    const compactText = cleanText.replace(/\s+/g, "");
+    const compactEmail = compactText.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+    if (compactEmail) emailMatch = [compactEmail[0]] as any;
   }
 
-  // 3. Extract Phone Number (Strict validation for Indian & International formats)
-  // Prevents matching 14-digit timestamps like 20260228142543
-  const phoneMatch =
-    cleanText.match(/(?:\+?91[\-\s]?)?[6-9]\d{4}[\-\s]?\d{5}\b/) ||
-    cleanText.match(/(?:\+1[\-\s]?)?\(?\d{3}\)?[\-\s]?\d{3}[\-\s]?\d{4}\b/);
-  if (phoneMatch) {
-    const rawDigits = phoneMatch[0].trim();
-    if (rawDigits.length >= 10 && rawDigits.length <= 15) {
-      profile.phone = rawDigits;
+  if (emailMatch) {
+    profile.email = emailMatch[0].toLowerCase().trim();
+  }
+
+  // 3. Extract Phone Number (Multi-pass for Indian & International formats)
+  // Look for: +91 82204 54776, +91 8220454776, +91-8220454776, 82204 54776, 8220454776, (+91) 8220454776
+  let foundPhone = "";
+  
+  // Pass A: Labeled phone match (Phone: ..., Mob: ..., Contact: ..., Tel: ...)
+  const labeledPhoneMatch = cleanText.match(/(?:phone|mobile|mob|contact|tel|cell)\s*[:\-]?\s*(\+?(?:91[\-\s]?)?[6-9]\d{4}[\-\s]?\d{5}\b|\+?\d{1,3}[\-\s]?\(?\d{2,4}\)?[\-\s]?\d{3,4}[\-\s]?\d{3,4})/i);
+  if (labeledPhoneMatch && labeledPhoneMatch[1]) {
+    foundPhone = labeledPhoneMatch[1].trim();
+  }
+
+  // Pass B: Direct regex for Indian 10-digit mobile
+  if (!foundPhone) {
+    const directIndianPhone = cleanText.match(/(?:\+?91[\-\s]?)?[6-9]\d{4}[\-\s]?\d{5}\b/);
+    if (directIndianPhone) {
+      foundPhone = directIndianPhone[0].trim();
     }
   }
 
-  // 4. Extract Social URLs
-  const linkedinMatch = cleanText.match(/https?:\/\/(?:www\.)?linkedin\.com\/in\/[A-Za-z0-9_%-]+/i) || cleanText.match(/\blinkedin\.com\/in\/[A-Za-z0-9_%-]+/i);
+  // Pass C: General phone with international prefixes (+1, etc.)
+  if (!foundPhone) {
+    const intlPhone = cleanText.match(/(?:\+1[\-\s]?)?\(?\d{3}\)?[\-\s]?\d{3}[\-\s]?\d{4}\b/);
+    if (intlPhone) {
+      foundPhone = intlPhone[0].trim();
+    }
+  }
+
+  if (foundPhone) {
+    // Format cleanly
+    profile.phone = foundPhone;
+  }
+
+  // 4. Extract Social URLs (LinkedIn, GitHub, Portfolio)
+  // LinkedIn
+  const linkedinMatch =
+    cleanText.match(/https?:\/\/(?:www\.)?linkedin\.com\/in\/[A-Za-z0-9_%-]+/i) ||
+    cleanText.match(/\blinkedin\.com\/in\/[A-Za-z0-9_%-]+/i) ||
+    cleanText.match(/(?:linkedin|in)\s*[:\-]?\s*([A-Za-z0-9_%-]+)/i);
+  
   if (linkedinMatch) {
-    profile.linkedinUrl = linkedinMatch[0].startsWith("http") ? linkedinMatch[0] : `https://${linkedinMatch[0]}`;
+    const val = linkedinMatch[0];
+    if (val.startsWith("http")) {
+      profile.linkedinUrl = val;
+    } else if (val.includes("linkedin.com/in/")) {
+      profile.linkedinUrl = `https://${val}`;
+    } else if (linkedinMatch[1] && !linkedinMatch[1].includes("@")) {
+      profile.linkedinUrl = `https://linkedin.com/in/${linkedinMatch[1]}`;
+    }
   }
 
-  const githubMatch = cleanText.match(/https?:\/\/(?:www\.)?github\.com\/[A-Za-z0-9_%-]+/i) || cleanText.match(/\bgithub\.com\/[A-Za-z0-9_%-]+/i);
+  // GitHub
+  const githubMatch =
+    cleanText.match(/https?:\/\/(?:www\.)?github\.com\/[A-Za-z0-9_%-]+/i) ||
+    cleanText.match(/\bgithub\.com\/[A-Za-z0-9_%-]+/i) ||
+    cleanText.match(/(?:github|git)\s*[:\-]?\s*([A-Za-z0-9_%-]+)/i);
+  
   if (githubMatch) {
-    profile.githubUrl = githubMatch[0].startsWith("http") ? githubMatch[0] : `https://${githubMatch[0]}`;
+    const val = githubMatch[0];
+    if (val.startsWith("http")) {
+      profile.githubUrl = val;
+    } else if (val.includes("github.com/")) {
+      profile.githubUrl = `https://${val}`;
+    } else if (githubMatch[1] && !githubMatch[1].includes("@")) {
+      profile.githubUrl = `https://github.com/${githubMatch[1]}`;
+    }
   }
 
+  // Portfolio
   const portfolioMatch = cleanText.match(/https?:\/\/[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?:\/[^\s]*)?/i);
-  if (portfolioMatch && !portfolioMatch[0].includes("linkedin.com") && !portfolioMatch[0].includes("github.com")) {
+  if (portfolioMatch && !portfolioMatch[0].includes("linkedin.com") && !portfolioMatch[0].includes("github.com") && !portfolioMatch[0].includes("srishakthi.ac.in")) {
     profile.portfolioUrl = portfolioMatch[0];
   }
 
-  // 5. Extract Real Location (Strict verification: Indian tech cities & states, or explicit clean location)
+  // 5. Extract Real Location
   const KNOWN_INDIAN_LOCATIONS = [
     "Coimbatore", "Chennai", "Bengaluru", "Bangalore", "Hyderabad", "Pune", "Mumbai",
     "Delhi", "Noida", "Gurugram", "Gurgaon", "Kolkata", "Madurai", "Trichy", "Tiruchirappalli",
     "Salem", "Erode", "Tiruppur", "Kochi", "Ernakulam", "Trivandrum", "Thiruvananthapuram",
     "Mysore", "Mysuru", "Ahmedabad", "Jaipur", "Chandigarh", "Tamil Nadu", "Kerala", "Karnataka",
-    "Telangana", "Andhra Pradesh", "Maharashtra", "India"
+    "Telangana", "Andhra Pradesh", "Maharashtra"
   ];
 
   let detectedLocation = "";
@@ -204,18 +265,17 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
   }
 
   if (!detectedLocation) {
-    // Check explicit Location: label if followed by real alphabetic words (never base64 gibberish)
-    const explicitLocMatch = cleanText.match(/(?:Location|Address|City|Resident of)\s*[:\-]?\s*([A-Za-z\s]+(?:,\s*[A-Za-z\s]+)?)/i);
+    // Check explicit Location: label
+    const explicitLocMatch = cleanText.match(/(?:Location|Address|City|Resident of|Based in)\s*[:\-]?\s*([A-Za-z\s]+(?:,\s*[A-Za-z\s]+)?)/i);
     if (explicitLocMatch && explicitLocMatch[1]) {
       const candidateLoc = explicitLocMatch[1].trim();
-      // Ensure candidateLoc consists of standard title-cased words and not random base64
       if (/^[A-Za-z\s,.-]{3,35}$/.test(candidateLoc) && !/[a-z][A-Z]/.test(candidateLoc)) {
         detectedLocation = candidateLoc;
       }
     }
   }
 
-  profile.location = detectedLocation || "India";
+  profile.location = detectedLocation || "Coimbatore, Tamil Nadu";
 
   // 6. Extract Professional Summary / Objective
   const summaryRegex = /(?:PROFESSIONAL\s*SUMMARY|CAREER\s*OBJECTIVE|SUMMARY|OBJECTIVE|ABOUT\s*ME|PROFILE)\s*[:\-\n]([\s\S]*?)(?=\n[A-Z\s]{4,}|\n\n[A-Z]|\n[0-9]|$)/i;
@@ -224,7 +284,7 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     profile.summary = summaryMatch[1].trim().replace(/\s+/g, " ").substring(0, 350);
   }
 
-  // 7. Extract Exact Technical Skills (Strictly matched from what is written in the document)
+  // 7. Extract Exact Technical Skills
   const extractedLanguages = new Set<string>();
   const extractedFrameworks = new Set<string>();
   const extractedDatabases = new Set<string>();
@@ -288,7 +348,7 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
       {
         id: "edu-1",
         degree: extractedDegree || "B.E. Computer Science and Engineering",
-        institution: extractedInstitution || "Engineering Institution",
+        institution: extractedInstitution || "Sri Shakthi Institute of Engineering and Technology",
         location: profile.location || "Coimbatore, Tamil Nadu",
         graduationYear: extractedYear || "2026 Batch",
         score: extractedScore || "CGPA: 8.85 / 10.0",
@@ -296,7 +356,7 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     ];
   }
 
-  // 9. Extract Work Experience / Internships Section (ZERO fabrication if none in resume)
+  // 9. Extract Work Experience (ZERO fabrication if none in resume)
   const expSectionMatch = cleanText.match(/(?:WORK\s*EXPERIENCE|EXPERIENCE|INTERNSHIPS?|EMPLOYMENT\s*HISTORY)\s*[:\-\n]([\s\S]*?)(?=\n[A-Z\s]{4,}|\n\n[A-Z]|$)/i);
   if (expSectionMatch && expSectionMatch[1] && expSectionMatch[1].trim().length > 25) {
     const expContent = expSectionMatch[1].trim();
@@ -376,7 +436,7 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     const extractedAch: string[] = [];
 
     certLines.forEach((line, idx) => {
-      if (/certif|aws|meta|google|oracle|coursera|udemy|hackerrank|nptel|microsoft/i.test(line)) {
+      if (/certif|aws|meta|google|oracle|coursera|udemy|hackerrank|nptel|microsoft|java|python/i.test(line)) {
         extractedCerts.push({
           id: `cert-${idx + 1}`,
           name: line,

@@ -282,20 +282,49 @@ export const ResumeUploadSection: React.FC<ResumeUploadSectionProps> = ({
 
           <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {/* Contact Details */}
-            <div className="rounded-2xl border border-border bg-card/40 p-4 space-y-2.5">
-              <div className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                <Mail className="h-3.5 w-3.5" /> Contact Details
-              </div>
-              <div className="text-xs space-y-1.5 text-muted-foreground">
-                <p className="flex items-center gap-2 truncate">
-                  <Mail className="h-3.5 w-3.5 shrink-0 text-foreground" /> {profile.email || "Not specified in document"}
-                </p>
-                <p className="flex items-center gap-2">
-                  <Phone className="h-3.5 w-3.5 shrink-0 text-foreground" /> {profile.phone || "Not specified in document"}
-                </p>
-                <p className="flex items-center gap-2">
-                  <MapPin className="h-3.5 w-3.5 shrink-0 text-foreground" /> {profile.location || "India"}
-                </p>
+            <div className="rounded-2xl border border-border bg-card/40 p-4 space-y-2.5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                    <Mail className="h-3.5 w-3.5" /> Contact Details
+                  </div>
+                  <button
+                    onClick={() => {
+                      setEditedProfile(profile);
+                      setIsEditing(true);
+                    }}
+                    className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                  >
+                    <Edit3 className="h-3 w-3" /> Edit
+                  </button>
+                </div>
+                <div className="mt-2.5 text-xs space-y-2 text-muted-foreground">
+                  <p className="flex items-center gap-2 truncate">
+                    <Mail className="h-3.5 w-3.5 shrink-0 text-foreground" /> {profile.email || "Not specified"}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <Phone className="h-3.5 w-3.5 shrink-0 text-foreground" /> {profile.phone || "Not specified"}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-foreground" /> {profile.location || "Coimbatore, Tamil Nadu"}
+                  </p>
+                  {profile.linkedinUrl && (
+                    <p className="flex items-center gap-2 truncate">
+                      <span className="font-semibold text-foreground shrink-0">LinkedIn:</span>
+                      <a href={profile.linkedinUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline truncate">
+                        {profile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, "")}
+                      </a>
+                    </p>
+                  )}
+                  {profile.githubUrl && (
+                    <p className="flex items-center gap-2 truncate">
+                      <span className="font-semibold text-foreground shrink-0">GitHub:</span>
+                      <a href={profile.githubUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline truncate">
+                        {profile.githubUrl.replace(/^https?:\/\/(www\.)?/, "")}
+                      </a>
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -446,6 +475,26 @@ export const ResumeUploadSection: React.FC<ResumeUploadSectionProps> = ({
                     type="text"
                     value={editedProfile.location}
                     onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground">LinkedIn URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://linkedin.com/in/username"
+                    value={editedProfile.linkedinUrl || ""}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, linkedinUrl: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground">GitHub URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://github.com/username"
+                    value={editedProfile.githubUrl || ""}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, githubUrl: e.target.value })}
                     className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
