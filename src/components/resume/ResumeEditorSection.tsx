@@ -1,15 +1,16 @@
 import React, { useState } from "react";
-import { Download, Sparkles, RefreshCw, Eye, Edit3, CheckCircle2, RotateCcw, Layout, FileText, ArrowUp, ArrowDown, GitCompare, ShieldCheck } from "lucide-react";
+import { Download, Sparkles, RefreshCw, Eye, Edit3, CheckCircle2, RotateCcw, Layout, FileText, ArrowUp, ArrowDown, GitCompare, ShieldCheck, Upload } from "lucide-react";
 import { CandidateProfile, ConnectedProfiles, ResumeTemplateId, TailoredResume } from "../../lib/resume/types";
 import { ResumeTemplates } from "./ResumeTemplates";
 import { exportToDocx, exportToPdf } from "../../lib/resume/exporter";
 
 interface ResumeEditorSectionProps {
-  baseProfile: CandidateProfile;
+  baseProfile: CandidateProfile | null;
   tailoredResume: TailoredResume | null;
   connected: ConnectedProfiles;
   onUpdateTailoredResume: (updated: TailoredResume) => void;
   onRestoreOriginal: () => void;
+  onNavigateToUpload?: () => void;
 }
 
 export const ResumeEditorSection: React.FC<ResumeEditorSectionProps> = ({
@@ -18,9 +19,30 @@ export const ResumeEditorSection: React.FC<ResumeEditorSectionProps> = ({
   connected,
   onUpdateTailoredResume,
   onRestoreOriginal,
+  onNavigateToUpload,
 }) => {
   const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplateId>("modern-minimal");
   const [viewMode, setViewMode] = useState<"preview" | "diff" | "edit">("preview");
+
+  if (!baseProfile || !baseProfile.name) {
+    return (
+      <div className="glass rounded-3xl p-12 text-center border border-dashed border-border/80 flex flex-col items-center justify-center space-y-3">
+        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-muted/60 text-muted-foreground mb-2">
+          <FileText className="h-8 w-8 text-primary opacity-80" />
+        </div>
+        <h3 className="text-lg font-bold text-foreground">No Base Resume Uploaded</h3>
+        <p className="text-xs md:text-sm text-muted-foreground max-w-md">
+          Please upload your official base resume in Step 1 to preview ATS templates, customize sections, and export tailored PDF / Word resumes.
+        </p>
+        <button
+          onClick={onNavigateToUpload}
+          className="mt-3 btn-gradient inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-md cursor-pointer active:scale-95 transition-all"
+        >
+          <Upload className="h-4 w-4" /> Go to Step 1: Upload Base Resume
+        </button>
+      </div>
+    );
+  }
 
   const currentProfile: CandidateProfile = tailoredResume || baseProfile;
 

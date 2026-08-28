@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Upload, Link2, FileSpreadsheet, Sparkles, FileEdit, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Upload, Link2, FileSpreadsheet, Sparkles, FileEdit, ShieldCheck } from "lucide-react";
 import { BaseResume, CandidateProfile, ConnectedProfiles, JobOpportunity, TailoredResume } from "../lib/resume/types";
-import { defaultCandidateProfile } from "../lib/resume/parser";
+import { emptyCandidateProfile } from "../lib/resume/parser";
 import { initialConnectedProfiles } from "../lib/resume/profileFetcher";
 import { sampleJobsDataset } from "../lib/resume/excelParser";
 import { generateTailoredResume } from "../lib/resume/tailorEngine";
@@ -11,6 +11,7 @@ import { ConnectedProfilesSection } from "../components/resume/ConnectedProfiles
 import { JobDirectorySection } from "../components/resume/JobDirectorySection";
 import { JobAnalysisModal } from "../components/resume/JobAnalysisModal";
 import { ResumeEditorSection } from "../components/resume/ResumeEditorSection";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/resume")({
   head: () => ({
@@ -27,15 +28,25 @@ function ResumePage() {
   // Global State
   const [activeTab, setActiveTab] = useState<"upload" | "profiles" | "jobs" | "editor">("upload");
 
-  const [baseResume, setBaseResume] = useState<BaseResume>({
-    fileName: "Sindhuja_Resume_2026.pdf",
-    fileSize: "1.42 MB",
-    uploadDate: new Date().toLocaleDateString(),
-    rawText: "Parsed candidate resume text",
-    status: "parsed",
+  // Base resume & candidate profile initialized as null unless saved in localStorage
+  const [baseResume, setBaseResume] = useState<BaseResume | null>(() => {
+    try {
+      const saved = localStorage.getItem("placify_base_resume");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
 
-  const [profile, setProfile] = useState<CandidateProfile>(defaultCandidateProfile);
+  const [profile, setProfile] = useState<CandidateProfile | null>(() => {
+    try {
+      const saved = localStorage.getItem("placify_candidate_profile");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [connectedProfiles, setConnectedProfiles] = useState<ConnectedProfiles>(initialConnectedProfiles);
   const [jobs, setJobs] = useState<JobOpportunity[]>(sampleJobsDataset);
 
@@ -43,14 +54,61 @@ function ResumePage() {
   const [tailoredResume, setTailoredResume] = useState<TailoredResume | null>(null);
   const [isTailoring, setIsTailoring] = useState(false);
 
+  // Sync to localStorage
+  useEffect(() => {
+    try {
+      if (baseResume) {
+        localStorage.setItem("placify_base_resume", JSON.stringify(baseResume));
+      } else {
+        localStorage.removeItem("placify_base_resume");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [baseResume]);
+
+  useEffect(() => {
+    try {
+      if (profile) {
+        localStorage.setItem("placify_candidate_profile", JSON.stringify(profile));
+      } else {
+        localStorage.removeItem("placify_candidate_profile");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [profile]);
+
+  const handleUpdateResume = (res: BaseResume, prof: CandidateProfile) => {
+    setBaseResume(res);
+    setProfile(prof);
+  };
+
+  const handleUpdateProfile = (prof: CandidateProfile) => {
+    setProfile(prof);
+  };
+
+  const handleRemoveResume = () => {
+    setBaseResume(null);
+    setProfile(null);
+    setTailoredResume(null);
+  };
+
   // Trigger AI Tailoring Engine
   const handleStartTailoring = (job: JobOpportunity) => {
+    if (!profile || !profile.name) {
+      toast.error("Please upload your base resume in Step 1 first before generating tailored resumes!");
+      setActiveTab("upload");
+      return;
+    }
+
     setIsTailoring(true);
     setTimeout(() => {
       const result = generateTailoredResume(profile, connectedProfiles, job);
       setTailoredResume(result);
       setIsTailoring(false);
       setActiveTab("editor");
+      toast.success(`Generated tailored resume for ${job.company} (${job.role})!`);
     }, 900);
   };
 
@@ -81,9 +139,9 @@ function ResumePage() {
       <div className="glass rounded-2xl p-1.5 flex overflow-x-auto gap-1">
         <button
           onClick={() => setActiveTab("upload")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeTab === "upload"
-              ? "btn-gradient shadow-md"
+              ? "btn-gradient shadow-md text-white"
               : "text-muted-foreground hover:bg-card hover:text-foreground"
           }`}
         >
@@ -92,9 +150,9 @@ function ResumePage() {
 
         <button
           onClick={() => setActiveTab("profiles")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeTab === "profiles"
-              ? "btn-gradient shadow-md"
+              ? "btn-gradient shadow-md text-white"
               : "text-muted-foreground hover:bg-card hover:text-foreground"
           }`}
         >
@@ -103,9 +161,9 @@ function ResumePage() {
 
         <button
           onClick={() => setActiveTab("jobs")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeTab === "jobs"
-              ? "btn-gradient shadow-md"
+              ? "btn-gradient shadow-md text-white"
               : "text-muted-foreground hover:bg-card hover:text-foreground"
           }`}
         >
@@ -114,9 +172,9 @@ function ResumePage() {
 
         <button
           onClick={() => setActiveTab("editor")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeTab === "editor"
-              ? "btn-gradient shadow-md"
+              ? "btn-gradient shadow-md text-white"
               : "text-muted-foreground hover:bg-card hover:text-foreground"
           }`}
         >
@@ -129,11 +187,9 @@ function ResumePage() {
         <ResumeUploadSection
           baseResume={baseResume}
           profile={profile}
-          onUpdateResume={(res, prof) => {
-            setBaseResume(res);
-            setProfile(prof);
-          }}
-          onUpdateProfile={(updated) => setProfile(updated)}
+          onUpdateResume={handleUpdateResume}
+          onUpdateProfile={handleUpdateProfile}
+          onRemoveResume={handleRemoveResume}
         />
       )}
 
@@ -149,7 +205,7 @@ function ResumePage() {
       {activeTab === "jobs" && (
         <JobDirectorySection
           jobs={jobs}
-          profile={profile}
+          profile={profile || emptyCandidateProfile}
           connected={connectedProfiles}
           onUpdateJobs={(updatedJobs) => setJobs(updatedJobs)}
           onSelectJobForAnalysis={(job) => setAnalyzingJob(job)}
@@ -165,6 +221,7 @@ function ResumePage() {
           connected={connectedProfiles}
           onUpdateTailoredResume={(updated) => setTailoredResume(updated)}
           onRestoreOriginal={() => setTailoredResume(null)}
+          onNavigateToUpload={() => setActiveTab("upload")}
         />
       )}
 
@@ -172,7 +229,7 @@ function ResumePage() {
       {analyzingJob && (
         <JobAnalysisModal
           job={analyzingJob}
-          profile={profile}
+          profile={profile || emptyCandidateProfile}
           connected={connectedProfiles}
           onClose={() => setAnalyzingJob(null)}
           onStartTailoring={() => {
