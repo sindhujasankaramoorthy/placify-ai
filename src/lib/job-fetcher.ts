@@ -31,15 +31,25 @@ export const getDailyJobs = createServerFn({ method: "GET" }).handler(async (): 
 
     // 2. Fetch from free public API (Remotive) 
     // Software Development category
-    const res = await fetch("https://remotive.com/api/remote-jobs?category=software-dev&limit=40");
+    const res = await fetch("https://remotive.com/api/remote-jobs?category=software-dev&limit=100");
     if (!res.ok) {
       throw new Error(`API returned ${res.status}`);
     }
     const data = await res.json();
     const allJobs = data.jobs || [];
     
+    // Filter out senior roles and keep beginner/mid/intern roles
+    const filteredJobs = allJobs.filter((job: any) => {
+      const title = (job.title || "").toLowerCase();
+      const seniorKeywords = [
+        "senior", "sr.", "sr ", "lead", "principal", "staff", "manager", "director", 
+        "architect", "vp", "vice president", "head", "cto", "tech lead", "expert", "management", "mgr"
+      ];
+      return !seniorKeywords.some(keyword => title.includes(keyword));
+    });
+    
     // 3. Format and Filter jobs (take up to 10 latest)
-    const formattedJobs: JobInfo[] = allJobs.slice(0, 10).map((job: any) => {
+    const formattedJobs: JobInfo[] = filteredJobs.slice(0, 10).map((job: any) => {
       // Create a random, but stable mock 'match' score between 75 and 99
       const matchScore = 75 + (job.id % 25);
       

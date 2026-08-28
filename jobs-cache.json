@@ -1,0 +1,106 @@
+[
+  {
+    "c": "Google",
+    "role": "SDE Intern",
+    "loc": "Bengaluru",
+    "salary": "1.2L / mo",
+    "match": 96,
+    "skills": [
+      "React",
+      "TypeScript",
+      "DSA"
+    ]
+  },
+  {
+    "c": "Microsoft",
+    "role": "SWE Intern",
+    "loc": "Hyderabad",
+    "salary": "1.1L / mo",
+    "match": 91,
+    "skills": [
+      "C#",
+      "Azure",
+      "System Design"
+    ]
+  },
+  {
+    "c": "TELUS Digital",
+    "role": "Content Reviewer - English US",
+    "loc": "USA",
+    "salary": "$14/hour",
+    "match": 80,
+    "skills": [
+      "android",
+      "ios",
+      "social media"
+    ]
+  },
+  {
+    "c": "TELUS Digital",
+    "role": "Face Deduplication Collection",
+    "loc": "USA",
+    "salary": "Pay per task",
+    "match": 93,
+    "skills": [
+      "research"
+    ]
+  },
+  {
+    "c": "Coalition Technologies ",
+    "role": "Remote Office Assistant",
+    "loc": "Worldwide",
+    "salary": "$31,2k- $52k",
+    "match": 95,
+    "skills": [
+      "CSS",
+      "excel",
+      "frontend"
+    ]
+  },
+  {
+    "c": "Unio Digital",
+    "role": "Tier III Service Desk Engineer",
+    "loc": "Worldwide",
+    "salary": "Competitive",
+    "match": 95,
+    "skills": [
+      "azure",
+      "cisco",
+      "security"
+    ]
+  },
+  {
+    "c": "Creative Force ",
+    "role": "Sales Jedi",
+    "loc": "Europe",
+    "salary": "Competitive",
+    "match": 88,
+    "skills": [
+      "saas",
+      "video",
+      "SOLID"
+    ]
+  },
+  {
+    "c": "Creative Force",
+    "role": "SaaS Product Support Jedi",
+    "loc": "Europe, EMEA, UK, Germany, France, European timezones",
+    "salary": "Competitive",
+    "match": 87,
+    "skills": [
+      "api",
+      "CSS",
+      "go"
+    ]
+  },
+  {
+    "c": "IAPWE",
+    "role": "Freelance Writer",
+    "loc": "Worldwide",
+    "salary": "$50-$75 /hour",
+    "match": 79,
+    "skills": [
+      "REST"
+    ]
+  }
+]
