@@ -47,9 +47,20 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
   const [leetcodeInput, setLeetcodeInput] = useState(connected.leetcode.username || defaultLcHandle);
   const [linkedinInput, setLinkedinInput] = useState(connected.linkedin.profileUrl || defaultLiUrl);
 
+  const [leetcodeEasyInput, setLeetcodeEasyInput] = useState<number>(connected.leetcode.easySolved ?? 24);
+  const [leetcodeMediumInput, setLeetcodeMediumInput] = useState<number>(connected.leetcode.mediumSolved ?? 0);
+  const [leetcodeHardInput, setLeetcodeHardInput] = useState<number>(connected.leetcode.hardSolved ?? 0);
+
   const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
   const [activeModal, setActiveModal] = useState<"github" | "leetcode" | "linkedin" | "all_repos" | null>(null);
   const [isConnectingAll, setIsConnectingAll] = useState(false);
+
+  React.useEffect(() => {
+    setLeetcodeInput(connected.leetcode.username || defaultLcHandle);
+    setLeetcodeEasyInput(connected.leetcode.easySolved ?? 24);
+    setLeetcodeMediumInput(connected.leetcode.mediumSolved ?? 0);
+    setLeetcodeHardInput(connected.leetcode.hardSolved ?? 0);
+  }, [connected.leetcode]);
 
   // Auto-upgrade repository list if old cache had less than 10 repos
   React.useEffect(() => {
