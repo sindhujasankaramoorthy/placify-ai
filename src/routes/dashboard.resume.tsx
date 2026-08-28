@@ -39,7 +39,12 @@ function ResumePage() {
         parsed.phone === "20260228142543" ||
         parsed.location === "WqMQ,BAHClkJdv" ||
         parsed.experience?.[0]?.company === "Engineering R&D Tech" ||
-        parsed.name?.endsWith("Resume")
+        parsed.name?.endsWith("Resume") ||
+        parsed.email?.includes("coimbatore") ||
+        parsed.githubUrl?.endsWith("GitHub") ||
+        parsed.linkedinUrl?.includes("DHUJA") ||
+        !parsed.projects ||
+        parsed.projects.length === 0
       ) {
         localStorage.removeItem("placify_candidate_profile");
         localStorage.removeItem("placify_base_resume");

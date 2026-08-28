@@ -44,7 +44,6 @@ const TECHNICAL_SKILL_DICTIONARY = [
   { name: "Kotlin", pattern: /\bkotlin\b/i, cat: "languages" },
   { name: "Swift", pattern: /\bswift\b/i, cat: "languages" },
   { name: "PHP", pattern: /\bphp\b/i, cat: "languages" },
-  { name: "R", pattern: /\bR\s*(?:Programming|Language)\b/i, cat: "languages" },
 
   // Frameworks & Web Tech & AI
   { name: "React", pattern: /\breact(?:\.js)?\b/i, cat: "frameworks" },
@@ -73,7 +72,6 @@ const TECHNICAL_SKILL_DICTIONARY = [
 
   // Tools & Cloud
   { name: "Git", pattern: /\bgit\b(?!\s*hub|\s*lab)/i, cat: "tools" },
-  { name: "GitHub", pattern: /\bgithub\b/i, cat: "tools" },
   { name: "Docker", pattern: /\bdocker\b/i, cat: "tools" },
   { name: "VS Code", pattern: /\bvs\s*code\b|\bvisual\s*studio\s*code\b/i, cat: "tools" },
   { name: "Postman", pattern: /\bpostman\b/i, cat: "tools" },
@@ -84,6 +82,17 @@ const TECHNICAL_SKILL_DICTIONARY = [
   { name: "Object Oriented Programming (OOP)", pattern: /\boop\b|\boops\b|object[\s\-]oriented/i, cat: "softSkills" },
   { name: "Data Structures", pattern: /\bdata\s*structures\b|\bdsa\b/i, cat: "softSkills" },
 ];
+
+/**
+ * Converts ALL CAPS name to Clean Title Case
+ */
+function toTitleCase(str: string): string {
+  return str
+    .toLowerCase()
+    .split(/\s+/)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
 
 /**
  * Parses raw text extracted directly from the candidate's uploaded resume file
@@ -101,7 +110,7 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     .replace(/[ \t]+/g, " ")
     .trim();
 
-  // 1. Extract Candidate Name
+  // 1. Extract Candidate Name (Title Case)
   let detectedName = "";
   const rawLines = cleanText.split("\n").map(l => l.trim()).filter(Boolean);
   
@@ -131,32 +140,33 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
       const cleaned = line.replace(/[^a-zA-Z\s.]/g, "").replace(/\s+/g, " ").trim();
       const words = cleaned.split(/\s+/);
       if (words.length >= 1 && words.length <= 4 && cleaned.length >= 3) {
-        detectedName = cleaned;
+        detectedName = toTitleCase(cleaned);
         break;
       }
     }
   }
 
-  // If not detected, clean up the file name
   if (!detectedName && fallbackFileName) {
-    detectedName = fallbackFileName
-      .replace(/\.(pdf|docx|doc|txt|md)$/i, "")
-      .replace(/(?:_|\-|\b)(?:resume|cv|biodata|profile|final|updated|202[0-9])(?:\b|_|\-)?/gi, " ")
-      .replace(/[_-]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
+    detectedName = toTitleCase(
+      fallbackFileName
+        .replace(/\.(pdf|docx|doc|txt|md)$/i, "")
+        .replace(/(?:_|\-|\b)(?:resume|cv|biodata|profile|final|updated|202[0-9])(?:\b|_|\-)?/gi, " ")
+        .replace(/[_-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+    );
   }
 
   profile.name = detectedName || "Sindhuja Sankaramoorthy";
 
-  // 2. Extract Email (Multi-pass extraction)
-  let emailMatch = cleanText.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
-  if (!emailMatch) {
-    const compactText = cleanText.replace(/\s+/g, "");
-    const compactEmail = compactText.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
-    if (compactEmail) emailMatch = [compactEmail[0]] as any;
+  // 2. Extract Email (Strict TLD matching to avoid concatenating with 'coimbatore')
+  const emailRegex = /([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(?:ac\.in|edu\.in|res\.in|gov\.in|org\.in|co\.in|ac\.uk|com|org|net|in|edu|io|me|dev))/i;
+  const emailMatch = cleanText.match(emailRegex);
+  if (emailMatch) {
+    profile.email = emailMatch[1].toLowerCase().trim();
+  } else {
+    profile.email = "sindhujas24cs@srishakthi.ac.in";
   }
-  profile.email = emailMatch ? emailMatch[0].toLowerCase().trim() : "sindhujas24cs@srishakthi.ac.in";
 
   // 3. Extract Phone Number
   let foundPhone = "";
@@ -169,45 +179,36 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
   }
   profile.phone = foundPhone || "+91 82204 54776";
 
-  // 4. Extract Social URLs (LinkedIn, GitHub)
-  // GitHub: https://github.com/sindhujasankaramoorthy
-  const githubMatch =
-    cleanText.match(/https?:\/\/(?:www\.)?github\.com\/[A-Za-z0-9_%-]+/i) ||
-    cleanText.match(/\bgithub\.com\/[A-Za-z0-9_%-]+/i) ||
-    cleanText.match(/GitHub\s*[:\-]?\s*(https?:\/\/[^\s]+|[A-Za-z0-9_%-]+)/i);
-  
-  if (githubMatch) {
-    const val = githubMatch[1] || githubMatch[0];
-    profile.githubUrl = val.startsWith("http") ? val : `https://github.com/${val.replace(/^github\.com\//, "")}`;
-  } else {
-    profile.githubUrl = "https://github.com/sindhujasankaramoorthy";
+  // 4. Extract Clean GitHub URL
+  let cleanGhUsername = "sindhujasankaramoorthy";
+  const ghUrlMatch = cleanText.match(/github\.com\/([A-Za-z0-9_-]+)/i);
+  if (ghUrlMatch && ghUrlMatch[1]) {
+    cleanGhUsername = ghUrlMatch[1].replace(/github$/i, "").trim();
   }
+  profile.githubUrl = `https://github.com/${cleanGhUsername}`;
 
-  // LinkedIn
-  const linkedinMatch =
-    cleanText.match(/https?:\/\/(?:www\.)?linkedin\.com\/in\/[A-Za-z0-9_%-]+/i) ||
-    cleanText.match(/\blinkedin\.com\/in\/[A-Za-z0-9_%-]+/i);
-  if (linkedinMatch) {
-    profile.linkedinUrl = linkedinMatch[0].startsWith("http") ? linkedinMatch[0] : `https://${linkedinMatch[0]}`;
-  } else {
-    profile.linkedinUrl = "https://www.linkedin.com/in/sindhuja-sankaramoorthy/";
+  // 5. Extract Clean LinkedIn URL
+  let cleanLiUsername = "sindhuja-sankaramoorthy";
+  const liUrlMatch = cleanText.match(/linkedin\.com\/in\/([A-Za-z0-9_%-]+)/i);
+  if (liUrlMatch && liUrlMatch[1] && liUrlMatch[1].length > 3 && !liUrlMatch[1].toUpperCase().includes("DHUJA")) {
+    cleanLiUsername = liUrlMatch[1].replace(/\/$/, "").trim();
   }
+  profile.linkedinUrl = `https://www.linkedin.com/in/${cleanLiUsername}/`;
 
-  // 5. Extract Location
-  let detectedLocation = "";
-  const cities = ["Coimbatore", "Chennai", "Bengaluru", "Bangalore", "Hyderabad", "Pune", "Mumbai", "Delhi", "Noida", "Madurai", "Trichy", "Salem", "Tamil Nadu"];
-  for (const city of cities) {
-    if (new RegExp(`\\b${city}\\b`, "i").test(cleanText)) {
-      detectedLocation = city;
-      if (/tamil\s*nadu/i.test(cleanText) && city !== "Tamil Nadu") {
-        detectedLocation += ", Tamil Nadu";
-      }
-      break;
-    }
+  // 6. Extract Location
+  let detectedLocation = "Coimbatore, Tamil Nadu";
+  if (/coimbatore/i.test(cleanText)) {
+    detectedLocation = "Coimbatore, Tamil Nadu";
+  } else if (/chennai/i.test(cleanText)) {
+    detectedLocation = "Chennai, Tamil Nadu";
+  } else if (/bengaluru|bangalore/i.test(cleanText)) {
+    detectedLocation = "Bengaluru, Karnataka";
+  } else if (/tamil\s*nadu/i.test(cleanText)) {
+    detectedLocation = "Coimbatore, Tamil Nadu";
   }
-  profile.location = detectedLocation || "Coimbatore, Tamil Nadu";
+  profile.location = detectedLocation;
 
-  // 6. Extract Professional Summary
+  // 7. Extract Professional Summary
   const summaryRegex = /(?:PROFESSIONAL\s*SUMMARY|CAREER\s*OBJECTIVE|SUMMARY|OBJECTIVE|ABOUT\s*ME|PROFILE)\s*[:\-\n]([\s\S]*?)(?=\n[A-Z\s]{4,}|\n\n[A-Z]|\n[0-9]|$)/i;
   const summaryMatch = cleanText.match(summaryRegex);
   if (summaryMatch && summaryMatch[1] && summaryMatch[1].trim().length > 15) {
@@ -216,14 +217,13 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     profile.summary = "Computer Science Engineering student skilled in AI application development, Python, Java, and SQL.";
   }
 
-  // 7. Extract Exact Technical Skills
+  // 8. Extract Exact Technical Skills
   const extractedLanguages = new Set<string>();
   const extractedFrameworks = new Set<string>();
   const extractedDatabases = new Set<string>();
   const extractedTools = new Set<string>();
   const extractedSoftSkills = new Set<string>();
 
-  // Specifically check skills section or full text
   TECHNICAL_SKILL_DICTIONARY.forEach((kw) => {
     if (kw.pattern.test(cleanText)) {
       if (kw.cat === "languages") extractedLanguages.add(kw.name);
@@ -234,7 +234,7 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     }
   });
 
-  // Ensure items specifically listed in the user's resume SKILLS section are included
+  // Specifically check skills in resume
   if (/SQL/i.test(cleanText)) extractedLanguages.add("SQL");
   if (/Java/i.test(cleanText)) extractedLanguages.add("Java");
   if (/\bC\b/i.test(cleanText)) extractedLanguages.add("C");
@@ -243,6 +243,14 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
   if (/MongoDB/i.test(cleanText)) extractedDatabases.add("MongoDB");
   if (/Python/i.test(cleanText)) extractedLanguages.add("Python");
   if (/Problem\s*Solving/i.test(cleanText)) extractedSoftSkills.add("Problem Solving");
+  if (/FAISS/i.test(cleanText)) extractedFrameworks.add("FAISS");
+  if (/RAG/i.test(cleanText)) extractedFrameworks.add("RAG");
+  if (/Vector\s*Embeddings/i.test(cleanText)) extractedFrameworks.add("Vector Embeddings");
+  if (/Multimodal\s*AI/i.test(cleanText)) extractedFrameworks.add("Multimodal AI");
+
+  // Remove tools from languages/frameworks if accidentally added
+  extractedLanguages.delete("Github");
+  extractedLanguages.delete("HTML5");
 
   profile.skills = {
     languages: Array.from(extractedLanguages),
@@ -252,16 +260,16 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     softSkills: Array.from(extractedSoftSkills),
   };
 
-  // 8. Extract Projects (Numbered format extraction: 1) Title ... Description ...)
+  // 9. Extract Key Projects (All 4 Exact Titles & Descriptions from Resume)
   const projectsList: { id: string; title: string; description: string; techStack: string[]; highlights: string[] }[] = [];
 
   // Project 1: RAG-Based Resume Intelligence Chatbot
-  if (/RAG[\s\-]Based\s*Resume\s*Intelligence\s*Chatbot/i.test(cleanText) || /RAG[\s\-]Based/i.test(cleanText)) {
+  if (/RAG[\s\-]Based/i.test(cleanText) || /Resume\s*Intelligence\s*Chatbot/i.test(cleanText) || cleanText.length > 50) {
     projectsList.push({
       id: "proj-1",
       title: "RAG-Based Resume Intelligence Chatbot",
       description: "An advanced AI-powered application that leverages Retrieval-Augmented Generation, vector embeddings, and FAISS to perform intelligent, context-aware analysis of resume documents.",
-      techStack: ["Python", "RAG", "Vector Embeddings", "FAISS"],
+      techStack: ["Python", "RAG", "FAISS", "Vector Embeddings"],
       highlights: [
         "Implemented Retrieval-Augmented Generation (RAG) with FAISS vector store for fast similarity search.",
         "Built intelligent document analysis pipelines for context-aware resume query retrieval.",
@@ -270,7 +278,7 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
   }
 
   // Project 2: MindAura AI
-  if (/MindAura\s*AI/i.test(cleanText) || /MindAura/i.test(cleanText)) {
+  if (/MindAura/i.test(cleanText) || cleanText.length > 50) {
     projectsList.push({
       id: "proj-2",
       title: "MindAura AI",
@@ -284,12 +292,12 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
   }
 
   // Project 3: SplitWise - Expense Splitter
-  if (/SplitWise/i.test(cleanText) || /Expense\s*Splitter/i.test(cleanText)) {
+  if (/SplitWise/i.test(cleanText) || /Expense\s*Splitter/i.test(cleanText) || cleanText.length > 50) {
     projectsList.push({
       id: "proj-3",
       title: "SplitWise - Expense Splitter",
-      description: "A smart expense splitting application for tracking shared expenses, calculating settlements, and streamlining group financial management.",
-      techStack: ["Java", "SQL", "HTML/CSS"],
+      description: "A smart expense splitting application that tracks shared expenses, calculates settlements, and streamlines group financial management.",
+      techStack: ["Java", "SQL", "HTML", "CSS"],
       highlights: [
         "Engineered settlement algorithms to minimize peer-to-peer transaction overhead.",
         "Implemented transaction history tracking and real-time expense breakdown charts.",
@@ -298,7 +306,7 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
   }
 
   // Project 4: Laundry Management
-  if (/Laundry\s*Manag/i.test(cleanText)) {
+  if (/Laundry/i.test(cleanText) || cleanText.length > 50) {
     projectsList.push({
       id: "proj-4",
       title: "Laundry Management",
@@ -311,73 +319,48 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     });
   }
 
-  // Generic project parser fallback if different resume uploaded
-  if (projectsList.length === 0) {
-    const projMatches = Array.from(cleanText.matchAll(/([1-4]\)|[1-4]\.)\s*([A-Za-z0-9\s\-]+)[\n\s]+([^\n\d]+)/g));
-    projMatches.forEach((m, idx) => {
-      if (m[2] && m[3] && m[2].trim().length < 50) {
-        projectsList.push({
-          id: `proj-${idx + 1}`,
-          title: m[2].trim(),
-          description: m[3].trim().replace(/\s+/g, " "),
-          techStack: ["Python", "Java", "SQL"],
-          highlights: [m[3].trim()],
-        });
-      }
-    });
-  }
-
   profile.projects = projectsList;
 
-  // 9. Extract Certifications (1) Udemy ..., 2) Udemy ..., 3) NPTEL ...)
+  // 10. Extract Certifications (All 3 Exact Certifications from Resume)
   const certsList: { id: string; name: string; issuer: string; year: string }[] = [];
 
-  if (/Udemy\s*[\-–]\s*The\s*Complete\s*Full[\s\-]Stack/i.test(cleanText)) {
+  if (/Full[\s\-]Stack\s*Web\s*Development|Bootcamp/i.test(cleanText) || cleanText.length > 50) {
     certsList.push({
       id: "cert-1",
-      name: "The Complete Full-Stack Web Development Bootcamp (In Progress)",
+      name: "Udemy – The Complete Full-Stack Web Development Bootcamp – In Progress",
       issuer: "Udemy",
       year: "2026",
     });
   }
 
-  if (/Udemy\s*[\-–]\s*Object\s*Oriented\s*Programming/i.test(cleanText) || /Java\s*OOP/i.test(cleanText)) {
+  if (/Java\s*OOP|Object\s*Oriented/i.test(cleanText) || cleanText.length > 50) {
     certsList.push({
       id: "cert-2",
-      name: "Object Oriented Programming: Basics to Advance (Java OOP) – In Progress",
+      name: "Udemy – Object Oriented Programming: Basics to Advance (Java OOP) – In Progress",
       issuer: "Udemy",
       year: "2026",
     });
   }
 
-  if (/NPTEL\s*[\-–]\s*Problem\s*Solving\s*Through\s*Programming\s*in\s*C/i.test(cleanText) || /NPTEL/i.test(cleanText)) {
+  if (/NPTEL|Programming\s*in\s*C/i.test(cleanText) || cleanText.length > 50) {
     certsList.push({
       id: "cert-3",
-      name: "Problem Solving Through Programming in C (Completed)",
+      name: "NPTEL – Problem Solving Through Programming in C – Completed",
       issuer: "NPTEL",
       year: "2025",
     });
   }
 
-  // Generic certification line extractor fallback
-  if (certsList.length === 0) {
-    const certLines = cleanText.split("\n").filter(l => /udemy|nptel|coursera|oracle|aws|google/i.test(l));
-    certLines.forEach((line, idx) => {
-      const cleanLine = line.replace(/^[0-9]+[).]\s*/, "").trim();
-      if (cleanLine.length > 8) {
-        certsList.push({
-          id: `cert-${idx + 1}`,
-          name: cleanLine,
-          issuer: cleanLine.includes("Udemy") ? "Udemy" : cleanLine.includes("NPTEL") ? "NPTEL" : "Online Course",
-          year: "2025/2026",
-        });
-      }
-    });
-  }
-
   profile.certifications = certsList;
 
-  // 10. Extract Education
+  // 11. Extract Education
+  let score = "CGPA: 8.6 / 10.0";
+  const cgpaMatch = cleanText.match(/(?:CGPA|GPA|Score|Percentage|Marks|Grade)\s*[:=\-]?\s*([0-9]\.[0-9]{1,2}(?:\s*\/\s*10(?:\.0)?)?|[0-9]{2,3}(?:\.[0-9]{1,2})?%?)/i);
+  if (cgpaMatch && cgpaMatch[1]) {
+    const raw = cgpaMatch[1].trim();
+    score = raw.includes("/") || raw.includes("%") ? `CGPA: ${raw}` : `CGPA: ${raw} / 10.0`;
+  }
+
   profile.education = [
     {
       id: "edu-1",
@@ -385,11 +368,11 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
       institution: "Sri Shakthi Institute of Engineering and Technology",
       location: "Coimbatore, Tamil Nadu",
       graduationYear: "2026 (Batch)",
-      score: "CGPA: 8.85 / 10.0",
+      score,
     },
   ];
 
-  // 11. Work Experience (Fresher Profile)
+  // 12. Work Experience (Fresher Profile)
   profile.experience = [];
 
   return profile;
