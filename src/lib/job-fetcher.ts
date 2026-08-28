@@ -9,6 +9,8 @@ interface JobInfo {
   salary: string;
   match: number;
   skills: string[];
+  url?: string;
+  desc?: string;
 }
 
 const CACHE_FILE = path.join(process.cwd(), "jobs-cache.json");
@@ -63,13 +65,33 @@ export const getDailyJobs = createServerFn({ method: "GET" }).handler(async (): 
         salary: job.salary || "Competitive", // The API often returns empty string for salary
         match: matchScore,
         skills,
+        url: job.url || "https://google.com/careers",
+        desc: job.description || `<p>No description provided. Please apply directly through the portal.</p>`
       };
     });
 
     // We can merge with some static known top-tier companies as 'internships' to keep the aesthetic
     const featured: JobInfo[] = [
-      { c: "Google", role: "SDE Intern", loc: "Bengaluru", salary: "1.2L / mo", match: 96, skills: ["React", "TypeScript", "DSA"] },
-      { c: "Microsoft", role: "SWE Intern", loc: "Hyderabad", salary: "1.1L / mo", match: 91, skills: ["C#", "Azure", "System Design"] }
+      { 
+        c: "Google", 
+        role: "SDE Intern", 
+        loc: "Bengaluru", 
+        salary: "1.2L / mo", 
+        match: 96, 
+        skills: ["React", "TypeScript", "DSA"],
+        url: "https://careers.google.com",
+        desc: "<h3>Role Description</h3><p>We are seeking a Software Development Engineer Intern to join Google's team in Bengaluru. You will work on real projects in React and TypeScript web app creation, algorithmic systems, and data structures. Highly collaborative environment with industry mentors.</p><h4>Requirements</h4><ul><li>Currently enrolled in a Bachelor's, Master's or PhD degree in Computer Science or related fields</li><li>Experience coding in TypeScript/JavaScript, C++, Java, or Go</li><li>Strong problem-solving and algorithmic foundations</li></ul>"
+      },
+      { 
+        c: "Microsoft", 
+        role: "SWE Intern", 
+        loc: "Hyderabad", 
+        salary: "1.1L / mo", 
+        match: 91, 
+        skills: ["C#", "Azure", "System Design"],
+        url: "https://careers.microsoft.com",
+        desc: "<h3>About the Role</h3><p>As a Software Engineering Intern at Microsoft Hyderabad, you will be part of a team pushing the boundaries of cloud systems and platform services on Azure. You'll contribute to codebases, participate in design reviews, and build tools that empower millions of users.</p><h4>Requirements</h4><ul><li>Demonstrated capability in C#, C++, or TypeScript</li><li>Basic understanding of database interfaces and cloud architectures</li><li>Outstanding Communication & teamwork skills</li></ul>"
+      }
     ];
     
     const finalJobs = [...featured, ...formattedJobs].slice(0, 9); // Keeping UI clean with 9 cards
@@ -82,9 +104,36 @@ export const getDailyJobs = createServerFn({ method: "GET" }).handler(async (): 
     console.error("Error fetching jobs:", err);
     // Fallback static data if network fails
     return [
-      { c: "Google", role: "SDE Intern", loc: "Bengaluru", salary: "1.2L / mo", match: 96, skills: ["React", "TypeScript", "DSA"] },
-      { c: "Stripe", role: "Frontend Engineer", loc: "Remote", salary: "$60k", match: 88, skills: ["React", "GraphQL", "UI"] },
-      { c: "Razorpay", role: "Backend", loc: "Bengaluru", salary: "18 LPA", match: 84, skills: ["Node", "SQL", "AWS"] }
+      { 
+        c: "Google", 
+        role: "SDE Intern", 
+        loc: "Bengaluru", 
+        salary: "1.2L / mo", 
+        match: 96, 
+        skills: ["React", "TypeScript", "DSA"],
+        url: "https://careers.google.com",
+        desc: "<h3>Role Description</h3><p>We are seeking a Software Development Engineer Intern to join Google's team in Bengaluru. You will work on real projects in React and TypeScript web app creation, algorithmic systems, and data structures. Highly collaborative environment with industry mentors.</p><h4>Requirements</h4><ul><li>Currently enrolled in a Bachelor's, Master's or PhD degree in Computer Science or related fields</li><li>Experience coding in TypeScript/JavaScript, C++, Java, or Go</li><li>Strong problem-solving and algorithmic foundations</li></ul>"
+      },
+      { 
+        c: "Stripe", 
+        role: "Frontend Engineer", 
+        loc: "Remote", 
+        salary: "$60k", 
+        match: 88, 
+        skills: ["React", "GraphQL", "UI"],
+        url: "https://stripe.com/careers",
+        desc: "<h3>Frontend Engineer</h3><p>Join the Stripe Dashboard team remotely and work on building beautiful payment interfaces, analytics tools, and dashboard components. Work with React, GraphQL, and modern CSS tokens.</p>"
+      },
+      { 
+        c: "Razorpay", 
+        role: "Backend", 
+        loc: "Bengaluru", 
+        salary: "18 LPA", 
+        match: 84, 
+        skills: ["Node", "SQL", "AWS"],
+        url: "https://razorpay.com/jobs",
+        desc: "<h3>Backend Engineer</h3><p>Work on core payment gateways at Razorpay. Designing robust APIs, handling thousands of request loads per second, optimizing database queries, and utilizing AWS infrastructures.</p>"
+      }
     ];
   }
 });

@@ -1,9 +1,21 @@
 import * as React from "react";
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, MapPin, DollarSign, Filter, Building2, Bookmark, ChevronDown, RotateCcw } from "lucide-react";
+import { Search, MapPin, DollarSign, Filter, Building2, Bookmark, ChevronDown, RotateCcw, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { getDailyJobs } from "../lib/job-fetcher";
+
+interface JobInfo {
+  c: string; // company
+  role: string;
+  loc: string;
+  salary: string;
+  match: number;
+  skills: string[];
+  url?: string;
+  desc?: string;
+}
 
 export const Route = createFileRoute("/dashboard/jobs")({
   head: () => ({
@@ -14,7 +26,7 @@ export const Route = createFileRoute("/dashboard/jobs")({
       { property: "og:description", content: "Personalized job matches." },
     ],
   }),
-  loader: async () => await getDailyJobs(),
+  loader: async () => await getDailyJobs() as JobInfo[],
   component: JobsPage,
 });
 
@@ -27,6 +39,20 @@ function JobsPage() {
   const [selectedCompany, setSelectedCompany] = useState("All");
   const [selectedExp, setSelectedExp] = useState("All");
   const [selectedSalaryType, setSelectedSalaryType] = useState("All");
+
+  const [activeJob, setActiveJob] = useState<JobInfo | null>(null);
+  const [bookmarkedJobs, setBookmarkedJobs] = useState<string[]>([]);
+
+  const toggleBookmark = (title: string, company: string) => {
+    const identifier = `${company}-${title}`;
+    if (bookmarkedJobs.includes(identifier)) {
+      setBookmarkedJobs(prev => prev.filter(k => k !== identifier));
+      toast.success(`Removed "${title}" from saved jobs`);
+    } else {
+      setBookmarkedJobs(prev => [...prev, identifier]);
+      toast.success(`Saved "${title}" to bookmarks!`);
+    }
+  };
 
   // Dynamically extract unique option values from the jobs data
   const uniqueLocations = useMemo(() => {
@@ -263,12 +289,109 @@ function JobsPage() {
                 ))}
               </div>
               <div className="mt-5 flex gap-2">
-                <button className="flex-1 rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent active:scale-95 transition-all">View</button>
-                <button className="flex-1 rounded-xl px-3 py-2 text-sm font-bold btn-gradient shadow-md active:scale-95 transition-all">Apply</button>
-                <button className="grid h-9 w-9 place-items-center rounded-xl border border-border hover:bg-accent active:scale-95 transition-all" aria-label="Save"><Bookmark className="h-4 w-4" /></button>
+                <button 
+                  onClick={() => setActiveJob(j)}
+                  className="flex-1 rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent active:scale-95 transition-all cursor-pointer"
+                >
+                  View
+                </button>
+                <button 
+                  onClick={() => {
+                    if (j.url) {
+                      toast.success(`Opening application portal for ${j.role} at ${j.c}`);
+                      window.open(j.url, "_blank");
+                    }
+                  }}
+                  className="flex-1 rounded-xl px-3 py-2 text-sm font-bold btn-gradient shadow-md active:scale-95 transition-all cursor-pointer"
+                >
+                  Apply
+                </button>
+                <button
+                  onClick={() => toggleBookmark(j.role, j.c)}
+                  className={`grid h-9 w-9 place-items-center rounded-xl border border-border hover:bg-accent active:scale-95 transition-all cursor-pointer ${
+                    bookmarkedJobs.includes(`${j.c}-${j.role}`) ? "bg-primary/10 text-primary border-primary" : ""
+                  }`}
+                  aria-label="Save"
+                >
+                  <Bookmark className="h-4 w-4" fill={bookmarkedJobs.includes(`${j.c}-${j.role}`) ? "currentColor" : "none"} />
+                </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Details Dialog overlay */}
+      {activeJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-background border border-border w-full max-w-2xl rounded-2xl flex flex-col max-h-[85vh] shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-6 border-b border-border flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="grid h-12 w-12 place-items-center rounded-xl gradient-brand text-white shadow-md">
+                  <Building2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-primary">{activeJob.c}</div>
+                  <h2 className="text-xl font-extrabold text-foreground">{activeJob.role}</h2>
+                </div>
+              </div>
+              <button 
+                onClick={() => setActiveJob(null)}
+                className="grid h-9 w-9 place-items-center rounded-xl border border-border hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer"
+                aria-label="Close details"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6 overflow-y-auto space-y-5 flex-1">
+              <div className="flex flex-wrap gap-4 text-xs font-semibold text-muted-foreground mr-1">
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-secondary/50 px-3 py-1.5"><MapPin className="h-4 w-4 text-primary/70" /> {activeJob.loc}</span>
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-secondary/50 px-3 py-1.5"><DollarSign className="h-4 w-4 text-primary/70" /> {activeJob.salary}</span>
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 text-primary px-3 py-1.5">{activeJob.match}% Match score</span>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-bold text-foreground mb-2">Required Skills</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {activeJob.skills.map((s) => (
+                    <span key={s} className="rounded-lg bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground border border-border/40">{s}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-4">
+                <h3 className="text-sm font-bold text-foreground mb-3">Job Description</h3>
+                <div 
+                  className="prose prose-sm dark:prose-invert max-w-none text-sm text-foreground/80 leading-relaxed font-normal space-y-3"
+                  dangerouslySetInnerHTML={{ __html: activeJob.desc || "No description loaded." }}
+                />
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="p-4 border-t border-border bg-muted/30 flex gap-3 justify-end">
+              <button 
+                onClick={() => setActiveJob(null)}
+                className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-accent transition-all cursor-pointer"
+              >
+                Close
+              </button>
+              <button 
+                onClick={() => {
+                  if (activeJob.url) {
+                    toast.success(`Opening application portal for ${activeJob.role} at ${activeJob.c}`);
+                    window.open(activeJob.url, "_blank");
+                  }
+                }}
+                className="rounded-xl px-5 py-2 text-sm font-bold btn-gradient shadow-md cursor-pointer transition-all active:scale-95"
+              >
+                Apply Now
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
