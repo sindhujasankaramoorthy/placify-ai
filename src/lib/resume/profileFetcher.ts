@@ -1,47 +1,6 @@
 import { ConnectedProfiles, GitHubData, LeetCodeData, LinkedInData } from "./types";
 
-export const initialConnectedProfiles: ConnectedProfiles = {
-  github: {
-    connected: true,
-    username: "sindhujasankaramoorthy",
-    avatarUrl: "https://api.dicebear.com/7.x/identicon/svg?seed=sindhujasankaramoorthy",
-    publicReposCount: 12,
-    totalStars: 1,
-    topLanguages: [
-      { name: "Python", percentage: 40 },
-      { name: "TypeScript", percentage: 30 },
-      { name: "Java", percentage: 20 },
-      { name: "Kotlin", percentage: 10 },
-    ],
-    featuredRepos: DEFAULT_GITHUB_REPOS,
-    recentActivitySummary: "Verified GitHub account @sindhujasankaramoorthy (12 public repositories).",
-  },
-  leetcode: {
-    connected: true,
-    username: "sindhujasankaramoorthy",
-    totalSolved: 0,
-    easySolved: 0,
-    mediumSolved: 0,
-    hardSolved: 0,
-    ranking: 0,
-    contestRating: 0,
-    topTopics: ["Problem Solving", "Java", "C", "Python"],
-  },
-  linkedin: {
-    connected: true,
-    profileUrl: "https://www.linkedin.com/in/sindhuja-sankaramoorthy/",
-    headline: "Software Engineering Student @ Sri Shakthi | Sindhuja Sankaramoorthy",
-    summary: "Dedicated student and developer building full stack AI applications and machine learning projects.",
-    endorsedSkills: ["SQL", "Java", "C", "HTML", "CSS", "MongoDB", "Python", "Problem Solving"],
-    certifications: [
-      "Udemy – The Complete Full-Stack Web Development Bootcamp",
-      "Udemy – Object Oriented Programming: Basics to Advance (Java OOP)",
-      "NPTEL – Problem Solving Through Programming in C",
-    ],
-  },
-};
-
-const DEFAULT_GITHUB_REPOS = [
+export const DEFAULT_GITHUB_REPOS = [
   {
     name: "AI-Based-Subsurface-Mineral-Deposit-Estimation-from-Geophysical-Surveys",
     description: "Machine learning models analyze patterns to predict mineral location and depth.",
@@ -140,6 +99,47 @@ const DEFAULT_GITHUB_REPOS = [
   },
 ];
 
+export const initialConnectedProfiles: ConnectedProfiles = {
+  github: {
+    connected: true,
+    username: "sindhujasankaramoorthy",
+    avatarUrl: "https://api.dicebear.com/7.x/identicon/svg?seed=sindhujasankaramoorthy",
+    publicReposCount: 12,
+    totalStars: 1,
+    topLanguages: [
+      { name: "Python", percentage: 40 },
+      { name: "TypeScript", percentage: 30 },
+      { name: "Java", percentage: 20 },
+      { name: "Kotlin", percentage: 10 },
+    ],
+    featuredRepos: DEFAULT_GITHUB_REPOS,
+    recentActivitySummary: "Verified GitHub account @sindhujasankaramoorthy (12 public repositories).",
+  },
+  leetcode: {
+    connected: true,
+    username: "sindhujasankaramoorthy",
+    totalSolved: 0,
+    easySolved: 0,
+    mediumSolved: 0,
+    hardSolved: 0,
+    ranking: 0,
+    contestRating: 0,
+    topTopics: ["Problem Solving", "Java", "C", "Python"],
+  },
+  linkedin: {
+    connected: true,
+    profileUrl: "https://www.linkedin.com/in/sindhuja-sankaramoorthy/",
+    headline: "Software Engineering Student @ Sri Shakthi | Sindhuja Sankaramoorthy",
+    summary: "Dedicated student and developer building full stack AI applications and machine learning projects.",
+    endorsedSkills: ["SQL", "Java", "C", "HTML", "CSS", "MongoDB", "Python", "Problem Solving"],
+    certifications: [
+      "Udemy – The Complete Full-Stack Web Development Bootcamp",
+      "Udemy – Object Oriented Programming: Basics to Advance (Java OOP)",
+      "NPTEL – Problem Solving Through Programming in C",
+    ],
+  },
+};
+
 /**
  * Fetches real GitHub profile & repos data safely without throwing
  */
@@ -153,11 +153,11 @@ export async function fetchGitHubProfile(usernameOrUrl: string): Promise<GitHubD
     const [userRes, reposRes] = await Promise.all([
       fetch(`https://api.github.com/users/${cleanUsername}`, {
         headers: { Accept: "application/vnd.github.v3+json" },
-        signal: AbortSignal.timeout(6000),
+        signal: AbortSignal.timeout(5000),
       }).catch(() => null),
       fetch(`https://api.github.com/users/${cleanUsername}/repos?sort=updated&per_page=100`, {
         headers: { Accept: "application/vnd.github.v3+json" },
-        signal: AbortSignal.timeout(6000),
+        signal: AbortSignal.timeout(5000),
       }).catch(() => null),
     ]);
 
@@ -265,7 +265,7 @@ export async function fetchLeetCodeProfile(inputUrlOrHandle: string): Promise<Le
   // Try Alfa LeetCode REST API
   try {
     const res = await fetch(`https://alfa-leetcode-api.onrender.com/userProfile/${username}`, {
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(3500),
     }).catch(() => null);
 
     if (res && res.ok) {
@@ -291,7 +291,7 @@ export async function fetchLeetCodeProfile(inputUrlOrHandle: string): Promise<Le
   // Try LeetCode Stats API
   try {
     const res2 = await fetch(`https://leetcode-stats-api.herokuapp.com/${username}`, {
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(3500),
     }).catch(() => null);
 
     if (res2 && res2.ok) {
@@ -343,9 +343,10 @@ export async function fetchLinkedInProfile(profileUrl: string): Promise<LinkedIn
     profileUrl: cleanUrl,
     headline: `Software Engineering Student @ Sri Shakthi | ${username.replace(/[_-]/g, " ")}`,
     summary: "Dedicated student and developer building full stack AI applications and machine learning projects.",
-    endorsedSkills: ["Python", "Java", "SQL", "HTML/CSS", "Problem Solving", "MongoDB"],
+    endorsedSkills: ["SQL", "Java", "C", "HTML", "CSS", "MongoDB", "Python", "Problem Solving"],
     certifications: [
       "Udemy – The Complete Full-Stack Web Development Bootcamp",
+      "Udemy – Object Oriented Programming: Basics to Advance (Java OOP)",
       "NPTEL – Problem Solving Through Programming in C",
     ],
   };
