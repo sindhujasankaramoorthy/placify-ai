@@ -41,7 +41,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
 }) => {
   const defaultGhHandle = candidateGithub ? candidateGithub.replace(/^https?:\/\/(www\.)?github\.com\//i, "").replace(/\/$/, "") : "sindhujasankaramoorthy";
   const defaultLiUrl = candidateLinkedin || "https://www.linkedin.com/in/sindhuja-sankaramoorthy/";
-  const defaultLcHandle = "sindhuja_sankaramoorthy";
+  const defaultLcHandle = "sindhujasankaramoorthy";
 
   const [githubInput, setGithubInput] = useState(connected.github.username || defaultGhHandle);
   const [leetcodeInput, setLeetcodeInput] = useState(connected.leetcode.username || defaultLcHandle);
