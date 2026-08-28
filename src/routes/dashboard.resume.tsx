@@ -94,9 +94,27 @@ function ResumePage() {
     }
   }, [profile]);
 
-  const handleUpdateResume = (res: BaseResume, prof: CandidateProfile) => {
+  const handleUpdateResume = async (res: BaseResume, prof: CandidateProfile) => {
     setBaseResume(res);
     setProfile(prof);
+
+    try {
+      let updatedConnected = { ...connectedProfiles };
+      if (prof.githubUrl) {
+        const ghUsername = prof.githubUrl.replace(/^https?:\/\/(www\.)?github\.com\//i, "").replace(/\/$/, "").trim();
+        if (ghUsername) {
+          const liveGh = await fetchGitHubProfile(ghUsername);
+          updatedConnected = { ...updatedConnected, github: liveGh };
+        }
+      }
+      if (prof.linkedinUrl) {
+        const liveLi = await fetchLinkedInProfile(prof.linkedinUrl);
+        updatedConnected = { ...updatedConnected, linkedin: liveLi };
+      }
+      setConnectedProfiles(updatedConnected);
+    } catch (err) {
+      console.error("Auto profile sync error:", err);
+    }
   };
 
   const handleUpdateProfile = (prof: CandidateProfile) => {
@@ -107,6 +125,7 @@ function ResumePage() {
     setBaseResume(null);
     setProfile(null);
     setTailoredResume(null);
+    setConnectedProfiles(initialConnectedProfiles);
   };
 
   // Trigger AI Tailoring Engine
