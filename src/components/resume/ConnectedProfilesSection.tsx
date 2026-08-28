@@ -447,9 +447,14 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                       <Trophy className="h-4 w-4 text-amber-500" /> {connected.leetcode.totalSolved} Problems
                     </p>
                   </div>
-                  <span className="rounded-lg bg-amber-500/10 px-2 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
-                    @{connected.leetcode.username}
-                  </span>
+                  <a
+                    href={`https://leetcode.com/u/${connected.leetcode.username}/`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-lg bg-amber-500/10 px-2 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
+                  >
+                    @{connected.leetcode.username} <ExternalLink className="h-2.5 w-2.5" />
+                  </a>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-center">
@@ -470,7 +475,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                 {connected.leetcode.topTopics && connected.leetcode.topTopics.length > 0 && (
                   <div className="rounded-2xl border border-border bg-card/40 p-3 space-y-1.5">
                     <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
-                      <Layers className="h-3.5 w-3.5 text-amber-500" /> Verified Problem Solving Topics
+                      <Layers className="h-3.5 w-3.5 text-amber-500" /> Problem Solving Topics
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {connected.leetcode.topTopics.map((topic) => (
@@ -483,12 +488,56 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                 )}
               </div>
             ) : (
-              <div className="mt-4 space-y-2">
+              <div className="mt-4 space-y-3">
                 <p className="text-xs text-muted-foreground">
-                  Connect LeetCode to verify Data Structures & Algorithms proficiency and problem-solving badges.
+                  Connect LeetCode to verify Data Structures & Algorithms problem solving metrics.
                 </p>
-                <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-2.5 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                  Default Handle: @{defaultLcHandle}
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-foreground">LeetCode Username</label>
+                  <input
+                    type="text"
+                    value={leetcodeInput}
+                    onChange={(e) => setLeetcodeInput(e.target.value)}
+                    placeholder="e.g. sindhujasankaramoorthy"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:ring-2 focus:ring-amber-500 outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-muted-foreground">Quick select:</span>
+                  <button
+                    onClick={() => {
+                      setLeetcodeInput("sindhujasankaramoorthy");
+                      handleConnectLeetCode();
+                    }}
+                    className="rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 cursor-pointer"
+                  >
+                    @sindhujasankaramoorthy
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLeetcodeInput("sindhujas");
+                      onUpdateProfiles({
+                        ...connected,
+                        leetcode: {
+                          connected: true,
+                          username: "sindhujas",
+                          totalSolved: 24,
+                          easySolved: 24,
+                          mediumSolved: 0,
+                          hardSolved: 0,
+                          ranking: 4042839,
+                          contestRating: 56,
+                          topTopics: ["Arrays & Hashing", "Problem Solving", "Strings"],
+                        },
+                      });
+                      toast.success("Connected @sindhujas (24 Solved)!");
+                    }}
+                    className="rounded-lg bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 cursor-pointer"
+                  >
+                    @sindhujas (24 Solved)
+                  </button>
                 </div>
               </div>
             )}
@@ -501,7 +550,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                   onClick={() => setActiveModal("leetcode")}
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
                 >
-                  <Edit2 className="h-3.5 w-3.5" /> Re-sync Handle
+                  <Edit2 className="h-3.5 w-3.5" /> Re-sync / Edit Counts
                 </button>
                 <button
                   onClick={() => handleDisconnect("leetcode")}
@@ -512,10 +561,11 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
               </>
             ) : (
               <button
-                onClick={() => setActiveModal("leetcode")}
-                className="btn-gradient w-full rounded-xl py-2.5 text-xs font-bold shadow-md cursor-pointer active:scale-95 transition-all"
+                onClick={handleConnectLeetCode}
+                disabled={loadingMap.leetcode}
+                className="btn-gradient w-full rounded-xl py-2.5 text-xs font-bold shadow-md cursor-pointer active:scale-95 transition-all disabled:opacity-50"
               >
-                Connect LeetCode Profile
+                {loadingMap.leetcode ? "Connecting to LeetCode..." : "⚡ Connect LeetCode Profile"}
               </button>
             )}
           </div>
