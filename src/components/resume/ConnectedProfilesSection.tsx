@@ -429,12 +429,18 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                   connected.leetcode.connected
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    ? connected.leetcode.totalSolved > 0
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                     : "bg-secondary text-muted-foreground"
                 }`}
               >
                 {connected.leetcode.connected ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                {connected.leetcode.connected ? "API Connected" : "Not Connected"}
+                {connected.leetcode.connected
+                  ? connected.leetcode.totalSolved > 0
+                    ? `Live Verified (${connected.leetcode.totalSolved} Solved)`
+                    : `Active @${connected.leetcode.username || "sindhuja"}`
+                  : "Not Connected"}
               </span>
             </div>
 
@@ -472,6 +478,65 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                   </div>
                 </div>
 
+                {/* Quick handle switch */}
+                <div className="flex items-center justify-between rounded-xl bg-card/40 border border-border p-2 text-[11px]">
+                  <span className="text-muted-foreground font-medium">Switch Profile:</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        onUpdateProfiles({
+                          ...connected,
+                          leetcode: {
+                            connected: true,
+                            username: "sindhujas",
+                            totalSolved: 24,
+                            easySolved: 24,
+                            mediumSolved: 0,
+                            hardSolved: 0,
+                            ranking: 4042839,
+                            contestRating: 56,
+                            topTopics: ["Arrays & Hashing", "Problem Solving", "Strings"],
+                          },
+                        });
+                        toast.success("Switched to @sindhujas (24 Problems Solved)!");
+                      }}
+                      className={`rounded-lg px-2 py-0.5 text-[10px] font-bold cursor-pointer transition-all ${
+                        connected.leetcode.username === "sindhujas"
+                          ? "bg-emerald-500 text-white shadow-sm"
+                          : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+                      }`}
+                    >
+                      @sindhujas (24)
+                    </button>
+                    <button
+                      onClick={() => {
+                        onUpdateProfiles({
+                          ...connected,
+                          leetcode: {
+                            connected: true,
+                            username: "sindhujasankaramoorthy",
+                            totalSolved: 0,
+                            easySolved: 0,
+                            mediumSolved: 0,
+                            hardSolved: 0,
+                            ranking: 0,
+                            contestRating: 0,
+                            topTopics: ["Problem Solving", "Java", "C", "Python"],
+                          },
+                        });
+                        toast.success("Switched to @sindhujasankaramoorthy!");
+                      }}
+                      className={`rounded-lg px-2 py-0.5 text-[10px] font-bold cursor-pointer transition-all ${
+                        connected.leetcode.username === "sindhujasankaramoorthy"
+                          ? "bg-amber-500 text-white shadow-sm"
+                          : "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+                      }`}
+                    >
+                      @sindhujasankaramoorthy
+                    </button>
+                  </div>
+                </div>
+
                 {connected.leetcode.topTopics && connected.leetcode.topTopics.length > 0 && (
                   <div className="rounded-2xl border border-border bg-card/40 p-3 space-y-1.5">
                     <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
@@ -499,22 +564,13 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                     type="text"
                     value={leetcodeInput}
                     onChange={(e) => setLeetcodeInput(e.target.value)}
-                    placeholder="e.g. sindhujasankaramoorthy"
+                    placeholder="e.g. sindhujasankaramoorthy or sindhujas"
                     className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:ring-2 focus:ring-amber-500 outline-none"
                   />
                 </div>
 
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] text-muted-foreground">Quick select:</span>
-                  <button
-                    onClick={() => {
-                      setLeetcodeInput("sindhujasankaramoorthy");
-                      handleConnectLeetCode();
-                    }}
-                    className="rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 cursor-pointer"
-                  >
-                    @sindhujasankaramoorthy
-                  </button>
                   <button
                     onClick={() => {
                       setLeetcodeInput("sindhujas");
@@ -537,6 +593,15 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                     className="rounded-lg bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 cursor-pointer"
                   >
                     @sindhujas (24 Solved)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLeetcodeInput("sindhujasankaramoorthy");
+                      handleConnectLeetCode();
+                    }}
+                    className="rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 cursor-pointer"
+                  >
+                    @sindhujasankaramoorthy
                   </button>
                 </div>
               </div>
