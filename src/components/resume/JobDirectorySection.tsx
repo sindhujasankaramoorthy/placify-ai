@@ -147,22 +147,22 @@ export const JobDirectorySection: React.FC<JobDirectorySectionProps> = ({
             >
               <div>
                 {/* Company & Match Badge */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary font-bold">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary font-bold">
                       {job.company.substring(0, 2).toUpperCase()}
                     </div>
-                    <div>
-                      <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">{job.role}</h4>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Building2 className="h-3 w-3" /> {job.company}
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-bold text-foreground group-hover:text-primary transition-colors truncate">{job.role}</h4>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                        <Building2 className="h-3 w-3 shrink-0" /> <span className="truncate">{job.company}</span>
                       </p>
                     </div>
                   </div>
 
-                  <div className="text-right">
+                  <div className="shrink-0 text-right">
                     <div
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold ${
+                      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-extrabold ${
                         isHighMatch
                           ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                           : "bg-amber-500/10 text-amber-600 dark:text-amber-400"

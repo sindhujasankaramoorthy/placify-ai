@@ -564,25 +564,25 @@ function JobsPage() {
                 <div>
                   {/* Top Row: Company & Match Badge */}
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl gradient-brand text-white font-black text-base shadow-sm">
                         {j.c.charAt(0)}
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-primary truncate">{j.c}</span>
-                          <span className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                          <span className="text-xs font-bold text-primary truncate max-w-[140px]">{j.c}</span>
+                          <span className="shrink-0 rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400">
                             Naukri
                           </span>
                         </div>
-                        <h2 className="text-sm md:text-base font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                        <h2 className="text-sm md:text-base font-bold text-foreground truncate group-hover:text-primary transition-colors">
                           {j.role}
                         </h2>
                       </div>
                     </div>
 
                     <div
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold shadow-xs ${
+                      className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-extrabold shadow-xs ${
                         isHighMatch
                           ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
                           : "bg-primary/10 text-primary border border-primary/20"
