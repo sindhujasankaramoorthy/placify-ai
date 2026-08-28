@@ -334,8 +334,8 @@ export const ResumeUploadSection: React.FC<ResumeUploadSectionProps> = ({
                 <Code className="h-3.5 w-3.5" /> Core Languages & Frameworks
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {[...profile.skills.languages, ...profile.skills.frameworks, ...profile.skills.databases, ...profile.skills.tools].length > 0 ? (
-                  [...profile.skills.languages, ...profile.skills.frameworks, ...profile.skills.databases, ...profile.skills.tools].slice(0, 10).map((skill) => (
+                {[...profile.skills.languages, ...profile.skills.frameworks, ...profile.skills.databases, ...profile.skills.tools, ...profile.skills.softSkills].length > 0 ? (
+                  [...profile.skills.languages, ...profile.skills.frameworks, ...profile.skills.databases, ...profile.skills.tools, ...profile.skills.softSkills].map((skill) => (
                     <span key={skill} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                       {skill}
                     </span>

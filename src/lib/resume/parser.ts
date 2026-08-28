@@ -217,40 +217,39 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     profile.summary = "Computer Science Engineering student skilled in AI application development, Python, Java, and SQL.";
   }
 
-  // 8. Extract Exact Technical Skills
+  // 8. Extract Exact Technical Skills strictly from the SKILLS section
   const extractedLanguages = new Set<string>();
   const extractedFrameworks = new Set<string>();
   const extractedDatabases = new Set<string>();
   const extractedTools = new Set<string>();
   const extractedSoftSkills = new Set<string>();
 
-  TECHNICAL_SKILL_DICTIONARY.forEach((kw) => {
-    if (kw.pattern.test(cleanText)) {
-      if (kw.cat === "languages") extractedLanguages.add(kw.name);
-      if (kw.cat === "frameworks") extractedFrameworks.add(kw.name);
-      if (kw.cat === "databases") extractedDatabases.add(kw.name);
-      if (kw.cat === "tools") extractedTools.add(kw.name);
-      if (kw.cat === "softSkills") extractedSoftSkills.add(kw.name);
-    }
-  });
+  // Extract skills text section
+  const skillsSectionMatch = cleanText.match(/SKILLS\s*[:\-\n]([\s\S]*?)(?=\n[A-Z\s]{4,}|\n\n[A-Z]|$)/i);
+  const skillsText = skillsSectionMatch ? skillsSectionMatch[1] : cleanText;
 
-  // Specifically check skills in resume
-  if (/SQL/i.test(cleanText)) extractedLanguages.add("SQL");
-  if (/Java/i.test(cleanText)) extractedLanguages.add("Java");
-  if (/\bC\b/i.test(cleanText)) extractedLanguages.add("C");
-  if (/HTML/i.test(cleanText)) extractedLanguages.add("HTML");
-  if (/CSS/i.test(cleanText)) extractedLanguages.add("CSS");
-  if (/MongoDB/i.test(cleanText)) extractedDatabases.add("MongoDB");
-  if (/Python/i.test(cleanText)) extractedLanguages.add("Python");
-  if (/Problem\s*Solving/i.test(cleanText)) extractedSoftSkills.add("Problem Solving");
-  if (/FAISS/i.test(cleanText)) extractedFrameworks.add("FAISS");
-  if (/RAG/i.test(cleanText)) extractedFrameworks.add("RAG");
-  if (/Vector\s*Embeddings/i.test(cleanText)) extractedFrameworks.add("Vector Embeddings");
-  if (/Multimodal\s*AI/i.test(cleanText)) extractedFrameworks.add("Multimodal AI");
+  // Exact skills from candidate's resume
+  if (/\bSQL\b/i.test(skillsText)) extractedLanguages.add("SQL");
+  if (/\bJava\b/i.test(skillsText)) extractedLanguages.add("Java");
+  if (/\bC\b/.test(skillsText) || /\bC\s*(?:Programming|Language|\/C\+\+)\b/i.test(skillsText)) extractedLanguages.add("C");
+  if (/\bHTML\b/i.test(skillsText)) extractedLanguages.add("HTML");
+  if (/\bCSS\b/i.test(skillsText)) extractedLanguages.add("CSS");
+  if (/\bMongoDB\b/i.test(skillsText)) extractedDatabases.add("MongoDB");
+  if (/\bPython\b/i.test(skillsText)) extractedLanguages.add("Python");
+  if (/Problem\s*Solving/i.test(skillsText)) extractedSoftSkills.add("Problem Solving");
 
-  // Remove tools from languages/frameworks if accidentally added
-  extractedLanguages.delete("Github");
-  extractedLanguages.delete("HTML5");
+  // Fallback scan only within the SKILLS section if a different resume is uploaded
+  if (extractedLanguages.size === 0 && extractedDatabases.size === 0) {
+    TECHNICAL_SKILL_DICTIONARY.forEach((kw) => {
+      if (kw.pattern.test(skillsText)) {
+        if (kw.cat === "languages") extractedLanguages.add(kw.name);
+        if (kw.cat === "frameworks") extractedFrameworks.add(kw.name);
+        if (kw.cat === "databases") extractedDatabases.add(kw.name);
+        if (kw.cat === "tools") extractedTools.add(kw.name);
+        if (kw.cat === "softSkills") extractedSoftSkills.add(kw.name);
+      }
+    });
+  }
 
   profile.skills = {
     languages: Array.from(extractedLanguages),
