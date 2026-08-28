@@ -35,7 +35,7 @@ export const JobDirectorySection: React.FC<JobDirectorySectionProps> = ({
   };
 
   // Compute live match scores for jobs
-  const processedJobs = jobs.map((job) => {
+  const processedJobs = (jobs || []).map((job) => {
     const match = analyzeJobMatch(profile, connected, job);
     return {
       ...job,
@@ -44,18 +44,18 @@ export const JobDirectorySection: React.FC<JobDirectorySectionProps> = ({
   });
 
   // Extract unique locations & skills for filter dropdowns
-  const uniqueLocations = Array.from(new Set(processedJobs.map((j) => j.location)));
-  const uniqueSkills = Array.from(new Set(processedJobs.flatMap((j) => j.skills)));
+  const uniqueLocations = Array.from(new Set(processedJobs.map((j) => j.location || "Coimbatore")));
+  const uniqueSkills = Array.from(new Set(processedJobs.flatMap((j) => j.skills || [])));
 
   // Filter jobs by search term, location, and skill
   const filteredJobs = processedJobs.filter((job) => {
     const matchesSearch =
-      job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.skills.some((s) => s.toLowerCase().includes(searchTerm.toLowerCase()));
+      (job.company || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (job.role || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (job.skills || []).some((s) => s.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesLoc = selectedLocation === "all" || job.location.includes(selectedLocation);
-    const matchesSkill = selectedSkillFilter === "all" || job.skills.includes(selectedSkillFilter);
+    const matchesLoc = selectedLocation === "all" || (job.location || "").includes(selectedLocation);
+    const matchesSkill = selectedSkillFilter === "all" || (job.skills || []).includes(selectedSkillFilter);
 
     return matchesSearch && matchesLoc && matchesSkill;
   });

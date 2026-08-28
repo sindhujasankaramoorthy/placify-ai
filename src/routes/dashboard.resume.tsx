@@ -51,6 +51,20 @@ function ResumePage() {
         localStorage.removeItem("placify_base_resume");
         return null;
       }
+
+      parsed.skills = {
+        languages: parsed.skills?.languages || [],
+        frameworks: parsed.skills?.frameworks || [],
+        databases: parsed.skills?.databases || [],
+        tools: parsed.skills?.tools || [],
+        softSkills: parsed.skills?.softSkills || [],
+      };
+      parsed.education = parsed.education || [];
+      parsed.projects = parsed.projects || [];
+      parsed.experience = parsed.experience || [];
+      parsed.certifications = parsed.certifications || [];
+      parsed.achievements = parsed.achievements || [];
+
       return parsed;
     } catch {
       return null;
@@ -84,6 +98,12 @@ function ResumePage() {
         localStorage.removeItem("placify_connected_profiles");
         return initialConnectedProfiles;
       }
+
+      parsed.github = parsed.github || initialConnectedProfiles.github;
+      parsed.github.featuredRepos = parsed.github.featuredRepos || initialConnectedProfiles.github.featuredRepos;
+      parsed.leetcode = parsed.leetcode || initialConnectedProfiles.leetcode;
+      parsed.linkedin = parsed.linkedin || initialConnectedProfiles.linkedin;
+
       return parsed;
     } catch {
       return initialConnectedProfiles;

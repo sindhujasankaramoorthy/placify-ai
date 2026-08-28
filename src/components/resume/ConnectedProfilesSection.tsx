@@ -53,15 +53,15 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
 
   // Auto-upgrade repository list if old cache had less than 10 repos
   React.useEffect(() => {
-    if (connected.github.connected && (!connected.github.featuredRepos || connected.github.featuredRepos.length < 10)) {
-      fetchGitHubProfile(connected.github.username || defaultGhHandle).then((ghData) => {
+    if (connected?.github?.connected && (!connected?.github?.featuredRepos || connected?.github?.featuredRepos?.length < 10)) {
+      fetchGitHubProfile(connected?.github?.username || defaultGhHandle).then((ghData) => {
         onUpdateProfiles({
           ...connected,
           github: ghData,
         });
-      });
+      }).catch(() => {});
     }
-  }, [connected.github.connected, connected.github.featuredRepos?.length]);
+  }, [connected?.github?.connected, connected?.github?.featuredRepos?.length]);
 
   // Search & Filter for All Repos
   const [repoSearch, setRepoSearch] = useState("");

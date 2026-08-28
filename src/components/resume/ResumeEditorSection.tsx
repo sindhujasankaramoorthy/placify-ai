@@ -71,14 +71,15 @@ export const ResumeEditorSection: React.FC<ResumeEditorSectionProps> = ({
     if (!tailoredResume) return;
 
     if (sectionName === "summary") {
-      const newSummary = `Highly focused Computer Science candidate with verified experience in ${currentProfile.skills.languages.slice(0, 3).join(", ")}. Demonstrated expertise building high-performance web applications tailored specifically for ${tailoredResume.companyName || "target placements"}.`;
+      const langs = (currentProfile.skills?.languages || []).slice(0, 3).join(", ");
+      const newSummary = `Highly focused Computer Science candidate with verified experience in ${langs || "modern software engineering"}. Demonstrated expertise building high-performance applications tailored specifically for ${tailoredResume.companyName || "target placements"}.`;
       onUpdateTailoredResume({
         ...tailoredResume,
         summary: newSummary,
         tailoredSummary: newSummary,
       });
     } else if (sectionName === "skills") {
-      const reorderedLanguages = [...currentProfile.skills.languages].reverse();
+      const reorderedLanguages = [...(currentProfile.skills?.languages || [])].reverse();
       onUpdateTailoredResume({
         ...tailoredResume,
         skills: {
@@ -90,11 +91,13 @@ export const ResumeEditorSection: React.FC<ResumeEditorSectionProps> = ({
   };
 
   const handleDownloadPdf = () => {
-    exportToPdf("resume-document-node", `${currentProfile.name.replace(/\s+/g, "_")}_Resume.pdf`);
+    const filename = `${(currentProfile.name || "Resume").replace(/\s+/g, "_")}_Resume.pdf`;
+    exportToPdf("resume-document-node", filename);
   };
 
   const handleDownloadDocx = () => {
-    exportToDocx(currentProfile, `${currentProfile.name.replace(/\s+/g, "_")}_Resume.docx`);
+    const filename = `${(currentProfile.name || "Resume").replace(/\s+/g, "_")}_Resume.docx`;
+    exportToDocx(currentProfile, filename);
   };
 
   return (

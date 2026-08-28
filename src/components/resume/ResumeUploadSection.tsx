@@ -42,7 +42,7 @@ export const ResumeUploadSection: React.FC<ResumeUploadSectionProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<CandidateProfile | null>(profile);
 
-  const isResumeActive = Boolean(baseResume?.status === "parsed" && profile && profile.name.trim().length > 0);
+  const isResumeActive = Boolean(baseResume?.status === "parsed" && profile?.name && profile.name.trim().length > 0);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -334,8 +334,20 @@ export const ResumeUploadSection: React.FC<ResumeUploadSectionProps> = ({
                 <Code className="h-3.5 w-3.5" /> Core Languages & Frameworks
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {[...profile.skills.languages, ...profile.skills.frameworks, ...profile.skills.databases, ...profile.skills.tools, ...profile.skills.softSkills].length > 0 ? (
-                  [...profile.skills.languages, ...profile.skills.frameworks, ...profile.skills.databases, ...profile.skills.tools, ...profile.skills.softSkills].map((skill) => (
+                {[
+                  ...(profile.skills?.languages || []),
+                  ...(profile.skills?.frameworks || []),
+                  ...(profile.skills?.databases || []),
+                  ...(profile.skills?.tools || []),
+                  ...(profile.skills?.softSkills || []),
+                ].length > 0 ? (
+                  [
+                    ...(profile.skills?.languages || []),
+                    ...(profile.skills?.frameworks || []),
+                    ...(profile.skills?.databases || []),
+                    ...(profile.skills?.tools || []),
+                    ...(profile.skills?.softSkills || []),
+                  ].map((skill) => (
                     <span key={skill} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                       {skill}
                     </span>
@@ -351,7 +363,7 @@ export const ResumeUploadSection: React.FC<ResumeUploadSectionProps> = ({
               <div className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
                 <GraduationCap className="h-3.5 w-3.5" /> Education
               </div>
-              {profile.education.length > 0 ? (
+              {profile.education && profile.education.length > 0 ? (
                 profile.education.map((edu) => (
                   <div key={edu.id} className="text-xs">
                     <p className="font-semibold text-foreground">{edu.degree}</p>
@@ -367,11 +379,11 @@ export const ResumeUploadSection: React.FC<ResumeUploadSectionProps> = ({
             <div className="rounded-2xl border border-border bg-card/40 p-4 space-y-3 lg:col-span-2">
               <div className="text-xs font-bold uppercase tracking-wider text-primary flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" /> Key Technical Projects ({profile.projects.length})
+                  <Sparkles className="h-3.5 w-3.5 text-primary" /> Key Technical Projects ({profile.projects?.length || 0})
                 </span>
               </div>
               <div className="space-y-3">
-                {profile.projects.length > 0 ? (
+                {profile.projects && profile.projects.length > 0 ? (
                   profile.projects.map((proj, idx) => (
                     <div key={proj.id || idx} className="border-l-2 border-primary/40 pl-3 py-0.5">
                       <div className="flex items-center justify-between">
@@ -400,15 +412,15 @@ export const ResumeUploadSection: React.FC<ResumeUploadSectionProps> = ({
               <div className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
                 <Award className="h-3.5 w-3.5" /> Certifications & Courses
               </div>
-              {profile.certifications.length > 0 || profile.achievements.length > 0 ? (
+              {(profile.certifications && profile.certifications.length > 0) || (profile.achievements && profile.achievements.length > 0) ? (
                 <ul className="text-xs space-y-2 text-muted-foreground">
-                  {profile.certifications.map((c, idx) => (
+                  {(profile.certifications || []).map((c, idx) => (
                     <li key={c.id || idx} className="flex items-start gap-1.5">
                       <span className="font-bold text-primary shrink-0">{idx + 1})</span>
                       <span className="text-foreground">{c.name}</span>
                     </li>
                   ))}
-                  {profile.achievements.map((a, i) => (
+                  {(profile.achievements || []).map((a, i) => (
                     <li key={i} className="flex items-start gap-1.5">
                       <span className="font-bold text-primary shrink-0">•</span>
                       <span>{a}</span>
