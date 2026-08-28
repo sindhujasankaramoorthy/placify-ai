@@ -1,3 +1,4 @@
+import { createServerFn } from "@tanstack/react-start";
 import { extractText } from "unpdf";
 import mammoth from "mammoth";
 import { CandidateProfile } from "./types";
@@ -38,6 +39,8 @@ const TECHNICAL_SKILL_DICTIONARY = [
   { name: "SQL", pattern: /\bsql\b/i, cat: "languages" },
   { name: "HTML5", pattern: /\bhtml5?\b/i, cat: "languages" },
   { name: "CSS3", pattern: /\bcss3?\b/i, cat: "languages" },
+  { name: "HTML", pattern: /\bhtml\b/i, cat: "languages" },
+  { name: "CSS", pattern: /\bcss\b/i, cat: "languages" },
   { name: "Go", pattern: /\bgolang\b|\bgo\s+language\b/i, cat: "languages" },
   { name: "Rust", pattern: /\brust\b/i, cat: "languages" },
   { name: "Kotlin", pattern: /\bkotlin\b/i, cat: "languages" },
@@ -152,16 +155,13 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
   profile.name = detectedName || "Candidate Profile";
 
   // 2. Extract Email (Multi-pass extraction)
-  // Pass A: Standard Email regex
   let emailMatch = cleanText.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
   
-  // Pass B: Check after 'Email:' / 'Mail:' labels
   if (!emailMatch) {
     const labeledEmail = cleanText.match(/(?:email|e-mail|mail)\s*[:\-]?\s*([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/i);
     if (labeledEmail) emailMatch = [labeledEmail[1]] as any;
   }
   
-  // Pass C: Check de-spaced strings (in case PDF.js spaced out chars like "s i n d h u j a @ ...")
   if (!emailMatch) {
     const compactText = cleanText.replace(/\s+/g, "");
     const compactEmail = compactText.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
@@ -173,16 +173,13 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
   }
 
   // 3. Extract Phone Number (Multi-pass for Indian & International formats)
-  // Look for: +91 82204 54776, +91 8220454776, +91-8220454776, 82204 54776, 8220454776, (+91) 8220454776
   let foundPhone = "";
   
-  // Pass A: Labeled phone match (Phone: ..., Mob: ..., Contact: ..., Tel: ...)
   const labeledPhoneMatch = cleanText.match(/(?:phone|mobile|mob|contact|tel|cell)\s*[:\-]?\s*(\+?(?:91[\-\s]?)?[6-9]\d{4}[\-\s]?\d{5}\b|\+?\d{1,3}[\-\s]?\(?\d{2,4}\)?[\-\s]?\d{3,4}[\-\s]?\d{3,4})/i);
   if (labeledPhoneMatch && labeledPhoneMatch[1]) {
     foundPhone = labeledPhoneMatch[1].trim();
   }
 
-  // Pass B: Direct regex for Indian 10-digit mobile
   if (!foundPhone) {
     const directIndianPhone = cleanText.match(/(?:\+?91[\-\s]?)?[6-9]\d{4}[\-\s]?\d{5}\b/);
     if (directIndianPhone) {
@@ -190,7 +187,6 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     }
   }
 
-  // Pass C: General phone with international prefixes (+1, etc.)
   if (!foundPhone) {
     const intlPhone = cleanText.match(/(?:\+1[\-\s]?)?\(?\d{3}\)?[\-\s]?\d{3}[\-\s]?\d{4}\b/);
     if (intlPhone) {
@@ -199,12 +195,10 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
   }
 
   if (foundPhone) {
-    // Format cleanly
     profile.phone = foundPhone;
   }
 
   // 4. Extract Social URLs (LinkedIn, GitHub, Portfolio)
-  // LinkedIn
   const linkedinMatch =
     cleanText.match(/https?:\/\/(?:www\.)?linkedin\.com\/in\/[A-Za-z0-9_%-]+/i) ||
     cleanText.match(/\blinkedin\.com\/in\/[A-Za-z0-9_%-]+/i) ||
@@ -221,7 +215,6 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     }
   }
 
-  // GitHub
   const githubMatch =
     cleanText.match(/https?:\/\/(?:www\.)?github\.com\/[A-Za-z0-9_%-]+/i) ||
     cleanText.match(/\bgithub\.com\/[A-Za-z0-9_%-]+/i) ||
@@ -238,7 +231,6 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
     }
   }
 
-  // Portfolio
   const portfolioMatch = cleanText.match(/https?:\/\/[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?:\/[^\s]*)?/i);
   if (portfolioMatch && !portfolioMatch[0].includes("linkedin.com") && !portfolioMatch[0].includes("github.com") && !portfolioMatch[0].includes("srishakthi.ac.in")) {
     profile.portfolioUrl = portfolioMatch[0];
@@ -265,7 +257,6 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
   }
 
   if (!detectedLocation) {
-    // Check explicit Location: label
     const explicitLocMatch = cleanText.match(/(?:Location|Address|City|Resident of|Based in)\s*[:\-]?\s*([A-Za-z\s]+(?:,\s*[A-Za-z\s]+)?)/i);
     if (explicitLocMatch && explicitLocMatch[1]) {
       const candidateLoc = explicitLocMatch[1].trim();
@@ -456,48 +447,77 @@ export function smartExtractCandidateData(rawText: string, fallbackFileName?: st
 }
 
 /**
+ * Server function to extract text and parse candidate profile on the backend
+ */
+export const parseResumeServerFn = createServerFn({ method: "POST" })
+  .validator((d: { base64: string; fileName: string }) => d)
+  .handler(async ({ data }): Promise<{ rawText: string; profile: CandidateProfile }> => {
+    try {
+      const buffer = Buffer.from(data.base64, "base64");
+      let extractedText = "";
+
+      if (data.fileName.toLowerCase().endsWith(".pdf")) {
+        const uint8 = new Uint8Array(buffer);
+        const pdfResult = await extractText(uint8);
+        if (Array.isArray(pdfResult.text)) {
+          extractedText = pdfResult.text.join("\n\n");
+        } else if (typeof pdfResult.text === "string") {
+          extractedText = pdfResult.text;
+        }
+      } else if (data.fileName.toLowerCase().endsWith(".docx")) {
+        const result = await mammoth.extractRawText({ buffer });
+        extractedText = result.value || "";
+      } else {
+        extractedText = buffer.toString("utf-8");
+      }
+
+      const cleanText = (extractedText || "").trim();
+      const profile = smartExtractCandidateData(cleanText, data.fileName);
+
+      return {
+        rawText: cleanText || `Extracted text from ${data.fileName}`,
+        profile,
+      };
+    } catch (err) {
+      console.error("Server resume parser error:", err);
+      const fallback = smartExtractCandidateData("", data.fileName);
+      return {
+        rawText: `Error reading file ${data.fileName}`,
+        profile: fallback,
+      };
+    }
+  });
+
+/**
  * Extracts raw text with 100% precision from any uploaded resume file (PDF, DOCX, TXT, MD, JSON)
  */
 export async function parseResumeFile(file: File): Promise<{ rawText: string; profile: CandidateProfile }> {
   try {
-    let extractedText = "";
-
-    // 1. PDF File Parsing using unpdf (Mozilla PDF.js engine)
-    if (file.type.includes("pdf") || file.name.toLowerCase().endsWith(".pdf")) {
-      const buffer = await file.arrayBuffer();
-      const uint8 = new Uint8Array(buffer);
-      const pdfResult = await extractText(uint8);
-      
-      if (Array.isArray(pdfResult.text)) {
-        extractedText = pdfResult.text.join("\n\n");
-      } else if (typeof pdfResult.text === "string") {
-        extractedText = pdfResult.text;
-      }
+    // Convert file to base64 and process via server function
+    const arrayBuffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
     }
-    // 2. Word / DOCX File Parsing using mammoth
-    else if (file.name.toLowerCase().endsWith(".docx") || file.type.includes("word") || file.type.includes("officedocument")) {
-      const buffer = await file.arrayBuffer();
-      const result = await mammoth.extractRawText({ arrayBuffer: buffer });
-      extractedText = result.value || "";
-    }
-    // 3. Plain Text / Markdown / JSON
-    else {
-      extractedText = await file.text();
-    }
+    const base64 = btoa(binary);
 
-    const cleanExtractedText = (extractedText || "").trim();
-    const profile = smartExtractCandidateData(cleanExtractedText, file.name);
+    const result = await parseResumeServerFn({
+      data: {
+        base64,
+        fileName: file.name,
+      },
+    });
 
-    return {
-      rawText: cleanExtractedText || `Extracted text from ${file.name}`,
-      profile,
-    };
+    return result;
   } catch (err) {
-    console.error("Resume file extraction error:", err);
-    const fallbackProfile = smartExtractCandidateData("", file.name);
+    console.error("Server function call error, trying client extraction:", err);
+    // Fallback if network issue
+    const text = await file.text().catch(() => "");
+    const profile = smartExtractCandidateData(text, file.name);
     return {
-      rawText: `Uploaded file: ${file.name}`,
-      profile: fallbackProfile,
+      rawText: text || file.name,
+      profile,
     };
   }
 }

@@ -29,18 +29,33 @@ function ResumePage() {
   const [activeTab, setActiveTab] = useState<"upload" | "profiles" | "jobs" | "editor">("upload");
 
   // Base resume & candidate profile initialized as null unless saved in localStorage
-  const [baseResume, setBaseResume] = useState<BaseResume | null>(() => {
+  const [profile, setProfile] = useState<CandidateProfile | null>(() => {
     try {
-      const saved = localStorage.getItem("placify_base_resume");
-      return saved ? JSON.parse(saved) : null;
+      const saved = localStorage.getItem("placify_candidate_profile");
+      if (!saved) return null;
+      const parsed = JSON.parse(saved) as CandidateProfile;
+      // Sanitize old corrupted artifacts
+      if (
+        parsed.phone === "20260228142543" ||
+        parsed.location === "WqMQ,BAHClkJdv" ||
+        parsed.experience?.[0]?.company === "Engineering R&D Tech" ||
+        parsed.name?.endsWith("Resume")
+      ) {
+        localStorage.removeItem("placify_candidate_profile");
+        localStorage.removeItem("placify_base_resume");
+        return null;
+      }
+      return parsed;
     } catch {
       return null;
     }
   });
 
-  const [profile, setProfile] = useState<CandidateProfile | null>(() => {
+  const [baseResume, setBaseResume] = useState<BaseResume | null>(() => {
     try {
-      const saved = localStorage.getItem("placify_candidate_profile");
+      const savedProf = localStorage.getItem("placify_candidate_profile");
+      if (!savedProf) return null;
+      const saved = localStorage.getItem("placify_base_resume");
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
