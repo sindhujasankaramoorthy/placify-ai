@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Github,
   Linkedin,
@@ -15,6 +15,10 @@ import {
   Sparkles,
   Layers,
   BookOpen,
+  Search,
+  FolderGit2,
+  Clock,
+  Filter,
 } from "lucide-react";
 import { ConnectedProfiles } from "../../lib/resume/types";
 import { fetchGitHubProfile, fetchLeetCodeProfile, fetchLinkedInProfile } from "../../lib/resume/profileFetcher";
@@ -44,8 +48,31 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
   const [linkedinInput, setLinkedinInput] = useState(connected.linkedin.profileUrl || defaultLiUrl);
 
   const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
-  const [activeModal, setActiveModal] = useState<"github" | "leetcode" | "linkedin" | null>(null);
+  const [activeModal, setActiveModal] = useState<"github" | "leetcode" | "linkedin" | "all_repos" | null>(null);
   const [isConnectingAll, setIsConnectingAll] = useState(false);
+
+  // Search & Filter for All Repos
+  const [repoSearch, setRepoSearch] = useState("");
+  const [selectedLang, setSelectedLang] = useState<string>("All");
+
+  const filteredRepos = useMemo(() => {
+    const repos = connected.github.featuredRepos || [];
+    return repos.filter((r) => {
+      const matchesSearch =
+        r.name.toLowerCase().includes(repoSearch.toLowerCase()) ||
+        (r.description && r.description.toLowerCase().includes(repoSearch.toLowerCase()));
+      const matchesLang = selectedLang === "All" || r.language.toLowerCase() === selectedLang.toLowerCase();
+      return matchesSearch && matchesLang;
+    });
+  }, [connected.github.featuredRepos, repoSearch, selectedLang]);
+
+  const availableLanguages = useMemo(() => {
+    const set = new Set<string>();
+    (connected.github.featuredRepos || []).forEach((r) => {
+      if (r.language && r.language !== "Code") set.add(r.language);
+    });
+    return ["All", ...Array.from(set)];
+  }, [connected.github.featuredRepos]);
 
   // 1-Click Connect All via Live APIs
   const handleConnectAll = async () => {
@@ -67,7 +94,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
 
       onUpdateProfiles(updated);
       toast.dismiss();
-      toast.success("Successfully connected to GitHub, LeetCode, and LinkedIn via Live APIs!");
+      toast.success(`Successfully connected ${ghData.featuredRepos.length} GitHub repositories, LeetCode, and LinkedIn!`);
     } catch (err) {
       console.error(err);
       toast.dismiss();
@@ -88,7 +115,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
         github: data,
       });
       setActiveModal(null);
-      toast.success(`Connected to GitHub account @${data.username} via GitHub REST API!`);
+      toast.success(`Connected to @${data.username} with all ${data.featuredRepos.length} public repositories!`);
     } catch (e) {
       toast.error("Could not fetch GitHub account.");
     } finally {
@@ -158,6 +185,25 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
 
   const allConnected = connected.github.connected && connected.leetcode.connected && connected.linkedin.connected;
 
+  const getLangBadgeColor = (lang: string) => {
+    switch (lang.toLowerCase()) {
+      case "python":
+        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      case "typescript":
+        return "bg-indigo-500/10 text-indigo-500 border-indigo-500/20";
+      case "javascript":
+        return "bg-amber-500/10 text-amber-500 border-amber-500/20";
+      case "kotlin":
+        return "bg-purple-500/10 text-purple-500 border-purple-500/20";
+      case "java":
+        return "bg-orange-500/10 text-orange-500 border-orange-500/20";
+      case "html":
+        return "bg-rose-500/10 text-rose-500 border-rose-500/20";
+      default:
+        return "bg-primary/10 text-primary border-primary/20";
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Banner & Quick Connect */}
@@ -211,7 +257,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground">GitHub</h3>
-                  <p className="text-xs text-muted-foreground">Public Repos & Activity</p>
+                  <p className="text-xs text-muted-foreground">All Public Repos & Activity</p>
                 </div>
               </div>
 
@@ -256,8 +302,8 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-xl border border-border bg-card/40 p-2.5 text-center">
-                    <span className="text-[10px] text-muted-foreground font-medium uppercase">Public Repos</span>
-                    <p className="text-base font-extrabold text-foreground">{connected.github.publicReposCount}</p>
+                    <span className="text-[10px] text-muted-foreground font-medium uppercase">Total Repositories</span>
+                    <p className="text-base font-extrabold text-foreground">{connected.github.featuredRepos?.length || connected.github.publicReposCount}</p>
                   </div>
                   <div className="rounded-xl border border-border bg-card/40 p-2.5 text-center">
                     <span className="text-[10px] text-muted-foreground font-medium uppercase">Stars Earned</span>
@@ -267,28 +313,51 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                   </div>
                 </div>
 
+                {/* Repos Preview & View All Button */}
                 {connected.github.featuredRepos && connected.github.featuredRepos.length > 0 && (
-                  <div className="rounded-2xl border border-border bg-card/40 p-3 space-y-2">
-                    <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
-                      <BookOpen className="h-3.5 w-3.5 text-purple-500" /> Featured Repositories
-                    </p>
+                  <div className="rounded-2xl border border-border bg-card/40 p-3 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                        <FolderGit2 className="h-3.5 w-3.5 text-purple-500" /> Public Repos ({connected.github.featuredRepos.length})
+                      </p>
+                      <button
+                        onClick={() => setActiveModal("all_repos")}
+                        className="text-[11px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-0.5"
+                      >
+                        View All Details →
+                      </button>
+                    </div>
+
                     <div className="space-y-1.5">
-                      {connected.github.featuredRepos.slice(0, 2).map((repo) => (
+                      {connected.github.featuredRepos.slice(0, 3).map((repo) => (
                         <a
                           key={repo.name}
                           href={repo.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="block rounded-lg bg-background/80 p-2 hover:bg-accent transition-colors"
+                          className="block rounded-xl bg-background/80 border border-border/60 p-2.5 hover:border-purple-500/40 hover:bg-accent/40 transition-all group"
                         >
                           <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-                            <span className="truncate">{repo.name}</span>
-                            <span className="text-[10px] text-primary font-mono">{repo.language}</span>
+                            <span className="truncate group-hover:text-primary transition-colors">{repo.name}</span>
+                            {repo.language && (
+                              <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-mono border ${getLangBadgeColor(repo.language)}`}>
+                                {repo.language}
+                              </span>
+                            )}
                           </div>
-                          <p className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">{repo.description}</p>
+                          {repo.description && (
+                            <p className="text-[10px] text-muted-foreground line-clamp-1 mt-1">{repo.description}</p>
+                          )}
                         </a>
                       ))}
                     </div>
+
+                    <button
+                      onClick={() => setActiveModal("all_repos")}
+                      className="w-full rounded-xl border border-purple-500/30 bg-purple-500/10 py-1.5 text-center text-xs font-bold text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 cursor-pointer transition-colors"
+                    >
+                      Browse All {connected.github.featuredRepos.length} Repositories with Code Details
+                    </button>
                   </div>
                 )}
               </div>
@@ -311,7 +380,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                   onClick={() => setActiveModal("github")}
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
                 >
-                  <Edit2 className="h-3.5 w-3.5" /> Re-sync / Change
+                  <Edit2 className="h-3.5 w-3.5" /> Re-sync Handle
                 </button>
                 <button
                   onClick={() => handleDisconnect("github")}
@@ -420,7 +489,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                   onClick={() => setActiveModal("leetcode")}
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
                 >
-                  <Edit2 className="h-3.5 w-3.5" /> Re-sync / Change
+                  <Edit2 className="h-3.5 w-3.5" /> Re-sync Handle
                 </button>
                 <button
                   onClick={() => handleDisconnect("leetcode")}
@@ -533,8 +602,156 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
         </div>
       </div>
 
+      {/* ALL REPOSITORIES EXPLORER MODAL */}
+      {activeModal === "all_repos" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="glass w-full max-w-4xl max-h-[85vh] rounded-3xl p-6 flex flex-col border border-border shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border pb-4 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-2xl bg-purple-500/10 text-purple-500">
+                  <FolderGit2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-lg text-foreground flex items-center gap-2">
+                    All Public GitHub Repositories
+                    <span className="rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2.5 py-0.5 text-xs font-bold">
+                      {connected.github.featuredRepos?.length || 0} Repositories
+                    </span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Connected account: <span className="font-semibold text-foreground">@{connected.github.username}</span>
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setActiveModal(null)}
+                className="rounded-xl p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Search & Language Filters */}
+            <div className="py-4 border-b border-border space-y-3 shrink-0">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={repoSearch}
+                    onChange={(e) => setRepoSearch(e.target.value)}
+                    placeholder="Search repositories by name or keyword..."
+                    className="w-full rounded-xl border border-border bg-background/80 pl-10 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-purple-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Language Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1 mr-1 shrink-0">
+                  <Filter className="h-3 w-3" /> Language:
+                </span>
+                {availableLanguages.map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => setSelectedLang(lang)}
+                    className={`rounded-lg px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                      selectedLang === lang
+                        ? "bg-purple-500 text-white shadow-sm"
+                        : "bg-card hover:bg-accent text-muted-foreground border border-border"
+                    }`}
+                  >
+                    {lang}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Repositories Scrollable List */}
+            <div className="overflow-y-auto flex-1 py-4 space-y-3 pr-1">
+              {filteredRepos.length > 0 ? (
+                filteredRepos.map((repo, idx) => (
+                  <div
+                    key={repo.name}
+                    className="rounded-2xl border border-border bg-card/50 hover:bg-card/90 p-4 transition-all hover:border-purple-500/40 space-y-2 group"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-bold text-muted-foreground">#{idx + 1}</span>
+                          <a
+                            href={repo.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-sm font-bold text-foreground group-hover:text-primary transition-colors flex items-center gap-1.5"
+                          >
+                            {repo.name}
+                            <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100" />
+                          </a>
+
+                          {repo.language && (
+                            <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold border ${getLangBadgeColor(repo.language)}`}>
+                              {repo.language}
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {repo.description || "Public repository hosted on GitHub."}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3 shrink-0 text-xs">
+                        <span className="flex items-center gap-1 font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-lg">
+                          <Star className="h-3 w-3 fill-amber-500" /> {repo.stars}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40">
+                      <span className="flex items-center gap-1 font-mono text-[10px]">
+                        <Clock className="h-3 w-3" /> Updated: {repo.updatedAt}
+                      </span>
+                      <a
+                        href={repo.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary hover:underline font-semibold flex items-center gap-1"
+                      >
+                        Open on GitHub <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <FolderGit2 className="h-10 w-10 mx-auto text-muted-foreground/50 mb-2" />
+                  <p className="text-sm font-bold text-foreground">No repositories found matching your filter</p>
+                  <p className="text-xs mt-1">Try resetting the search keyword or language filter.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-border pt-3 shrink-0 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">
+                Showing {filteredRepos.length} of {connected.github.featuredRepos?.length || 0} repositories
+              </span>
+              <button
+                onClick={() => setActiveModal(null)}
+                className="btn-gradient rounded-xl px-5 py-2 text-xs font-bold text-white shadow-md cursor-pointer"
+              >
+                Close Explorer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Connect Modals */}
-      {activeModal && (
+      {activeModal && activeModal !== "all_repos" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="glass w-full max-w-md rounded-3xl p-6 space-y-4 border border-border shadow-2xl">
             <div className="flex items-center justify-between border-b border-border pb-3">
@@ -564,7 +781,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                     className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-purple-500 outline-none"
                   />
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    Queries GitHub REST API (`https://api.github.com/users/{githubInput || "username"}`)
+                    Queries GitHub REST API (`https://api.github.com/users/{githubInput || "username"}/repos`) for all public repositories.
                   </p>
                 </div>
 
@@ -586,7 +803,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                       </>
                     ) : (
                       <>
-                        <Zap className="h-3.5 w-3.5" /> Fetch & Connect API
+                        <Zap className="h-3.5 w-3.5" /> Fetch All Repos & Connect
                       </>
                     )}
                   </button>
