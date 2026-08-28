@@ -72,8 +72,12 @@ function ResumePage() {
       const saved = localStorage.getItem("placify_connected_profiles");
       if (!saved) return initialConnectedProfiles;
       const parsed = JSON.parse(saved) as ConnectedProfiles;
-      // If old cached profile has less than 12 repos, auto-purge to fetch full repository list
-      if (!parsed.github?.featuredRepos || parsed.github.featuredRepos.length < 10) {
+      // If old cached profile has less than 10 repos or old 32 mock leetcode count, auto-purge
+      if (
+        !parsed.github?.featuredRepos ||
+        parsed.github.featuredRepos.length < 10 ||
+        parsed.leetcode?.totalSolved === 32
+      ) {
         localStorage.removeItem("placify_connected_profiles");
         return initialConnectedProfiles;
       }

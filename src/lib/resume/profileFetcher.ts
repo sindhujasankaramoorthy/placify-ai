@@ -277,8 +277,35 @@ export async function fetchLeetCodeProfile(inputUrlOrHandle: string): Promise<Le
   const username = inputUrlOrHandle
     .replace(/^https?:\/\/(www\.)?leetcode\.com\/(u\/)?/i, "")
     .replace(/\/$/, "")
-    .trim() || "sindhuja_sankaramoorthy";
+    .trim() || "sindhujasankaramoorthy";
 
+  // Try endpoint 1: alfa-leetcode
+  try {
+    const res = await fetch(`https://alfa-leetcode-api.onrender.com/userProfile/${username}`, {
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (typeof data.totalSolved === "number") {
+        return {
+          connected: true,
+          username,
+          totalSolved: data.totalSolved || 0,
+          easySolved: data.easySolved || 0,
+          mediumSolved: data.mediumSolved || 0,
+          hardSolved: data.hardSolved || 0,
+          ranking: data.ranking && data.ranking < 5000000 ? data.ranking : 0,
+          contestRating: data.contributionPoint || 0,
+          topTopics: data.totalSolved > 0 ? ["Arrays & Hashing", "Problem Solving"] : [],
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("alfa-leetcode API error:", err);
+  }
+
+  // Try endpoint 2: leetcode-stats-api
   try {
     const res = await fetch(`https://leetcode-stats-api.herokuapp.com/${username}`, {
       signal: AbortSignal.timeout(5000),
@@ -286,34 +313,34 @@ export async function fetchLeetCodeProfile(inputUrlOrHandle: string): Promise<Le
 
     if (res.ok) {
       const data = await res.json();
-      if (data.status === "success" && data.totalSolved > 0) {
+      if (data.status === "success" && typeof data.totalSolved === "number") {
         return {
           connected: true,
           username,
-          totalSolved: data.totalSolved,
+          totalSolved: data.totalSolved || 0,
           easySolved: data.easySolved || 0,
           mediumSolved: data.mediumSolved || 0,
           hardSolved: data.hardSolved || 0,
           ranking: data.ranking || 0,
-          contestRating: data.contributionPoint || 0,
-          topTopics: ["Arrays & Hashing", "Strings", "Algorithms"],
+          contestRating: 0,
+          topTopics: data.totalSolved > 0 ? ["Arrays & Hashing", "Strings"] : [],
         };
       }
     }
   } catch (err) {
-    console.warn("LeetCode live API timeout/error:", err);
+    console.warn("leetcode-stats-api error:", err);
   }
 
   return {
     connected: true,
     username,
-    totalSolved: 32,
-    easySolved: 20,
-    mediumSolved: 11,
-    hardSolved: 1,
-    ranking: 165000,
+    totalSolved: 0,
+    easySolved: 0,
+    mediumSolved: 0,
+    hardSolved: 0,
+    ranking: 0,
     contestRating: 0,
-    topTopics: ["Arrays & Hashing", "Problem Solving", "Strings", "Binary Search"],
+    topTopics: [],
   };
 }
 

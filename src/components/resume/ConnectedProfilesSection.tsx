@@ -826,30 +826,75 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
             {activeModal === "leetcode" && (
               <div className="space-y-4 text-sm">
                 <div>
-                  <label className="text-xs font-semibold text-foreground">LeetCode Username or Handle</label>
+                  <label className="text-xs font-semibold text-foreground">LeetCode Username or Profile Link</label>
                   <input
                     type="text"
                     value={leetcodeInput}
                     onChange={(e) => setLeetcodeInput(e.target.value)}
-                    placeholder="e.g. sindhuja_sankaramoorthy"
+                    placeholder="e.g. sindhujasankaramoorthy or sindhujas"
                     className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-amber-500 outline-none"
                   />
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    Fetches verified problem-solving counts and DSA topics.
+                    Queries live LeetCode APIs. Enter your handle to pull live metrics.
                   </p>
                 </div>
 
-                <div className="pt-2 flex justify-end gap-2">
+                <div className="rounded-2xl border border-border bg-card/60 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground">Problem Count Breakdown</label>
+                    <span className="text-[10px] text-muted-foreground">Editable counts</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[10px] text-emerald-600 font-bold uppercase">Easy</label>
+                      <input
+                        type="number"
+                        value={leetcodeEasyInput}
+                        onChange={(e) => {
+                          const val = Math.max(0, Number(e.target.value) || 0);
+                          setLeetcodeEasyInput(val);
+                        }}
+                        className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-amber-600 font-bold uppercase">Medium</label>
+                      <input
+                        type="number"
+                        value={leetcodeMediumInput}
+                        onChange={(e) => {
+                          const val = Math.max(0, Number(e.target.value) || 0);
+                          setLeetcodeMediumInput(val);
+                        }}
+                        className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-rose-600 font-bold uppercase">Hard</label>
+                      <input
+                        type="number"
+                        value={leetcodeHardInput}
+                        onChange={(e) => {
+                          const val = Math.max(0, Number(e.target.value) || 0);
+                          setLeetcodeHardInput(val);
+                        }}
+                        className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex flex-wrap justify-end gap-2">
                   <button
                     onClick={() => setActiveModal(null)}
-                    className="rounded-xl border border-border px-4 py-2 text-xs font-semibold hover:bg-accent cursor-pointer"
+                    className="rounded-xl border border-border px-3.5 py-2 text-xs font-semibold hover:bg-accent cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleConnectLeetCode}
                     disabled={loadingMap.leetcode}
-                    className="btn-gradient inline-flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-bold text-white shadow-md cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                    className="btn-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-md cursor-pointer active:scale-95 transition-all disabled:opacity-50"
                   >
                     {loadingMap.leetcode ? (
                       <>
@@ -857,9 +902,33 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                       </>
                     ) : (
                       <>
-                        <Zap className="h-3.5 w-3.5" /> Fetch & Connect API
+                        <Zap className="h-3.5 w-3.5" /> Fetch Live API
                       </>
                     )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      const total = (Number(leetcodeEasyInput) || 0) + (Number(leetcodeMediumInput) || 0) + (Number(leetcodeHardInput) || 0);
+                      onUpdateProfiles({
+                        ...connected,
+                        leetcode: {
+                          connected: true,
+                          username: leetcodeInput || "sindhujasankaramoorthy",
+                          totalSolved: total,
+                          easySolved: Number(leetcodeEasyInput) || 0,
+                          mediumSolved: Number(leetcodeMediumInput) || 0,
+                          hardSolved: Number(leetcodeHardInput) || 0,
+                          ranking: 0,
+                          contestRating: 0,
+                          topTopics: total > 0 ? ["Problem Solving", "DSA", "Algorithms"] : [],
+                        },
+                      });
+                      setActiveModal(null);
+                      toast.success(`Saved LeetCode profile (${total} solved)!`);
+                    }}
+                    className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 cursor-pointer"
+                  >
+                    Save Counts
                   </button>
                 </div>
               </div>
