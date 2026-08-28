@@ -40,73 +40,87 @@ export const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ profile, conne
             Technical Qualifications
           </h2>
           <div className="text-xs space-y-1 text-slate-800 font-sans">
-            <p><strong className="font-serif">Languages:</strong> {profile.skills.languages.join(", ")}</p>
-            <p><strong className="font-serif">Frameworks & Libraries:</strong> {profile.skills.frameworks.join(", ")}</p>
-            <p><strong className="font-serif">Databases & Cloud:</strong> {profile.skills.databases.join(", ")}</p>
-            <p><strong className="font-serif">Developer Tools:</strong> {profile.skills.tools.join(", ")}</p>
+            {(profile.skills?.languages || []).length > 0 && (
+              <p><strong className="font-serif">Languages:</strong> {profile.skills.languages.join(", ")}</p>
+            )}
+            {(profile.skills?.frameworks || []).length > 0 && (
+              <p><strong className="font-serif">Frameworks & Libraries:</strong> {profile.skills.frameworks.join(", ")}</p>
+            )}
+            {(profile.skills?.databases || []).length > 0 && (
+              <p><strong className="font-serif">Databases & Cloud:</strong> {profile.skills.databases.join(", ")}</p>
+            )}
+            {(profile.skills?.tools || []).length > 0 && (
+              <p><strong className="font-serif">Developer Tools:</strong> {profile.skills.tools.join(", ")}</p>
+            )}
           </div>
         </div>
 
         {/* Experience */}
-        <div className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5">
-            Experience
-          </h2>
-          <div className="space-y-3">
-            {profile.experience.map((exp) => (
-              <div key={exp.id} className="space-y-1">
-                <div className="flex justify-between font-bold text-xs text-slate-900">
-                  <span>{exp.role} &nbsp;—&nbsp; {exp.company}</span>
-                  <span className="font-normal text-slate-700">{exp.startDate} – {exp.endDate}</span>
+        {(profile.experience || []).length > 0 && (
+          <div className="space-y-2">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5">
+              Experience
+            </h2>
+            <div className="space-y-3">
+              {profile.experience.map((exp) => (
+                <div key={exp.id} className="space-y-1">
+                  <div className="flex justify-between font-bold text-xs text-slate-900">
+                    <span>{exp.role} &nbsp;—&nbsp; {exp.company}</span>
+                    <span className="font-normal text-slate-700">{exp.startDate} – {exp.endDate}</span>
+                  </div>
+                  <div className="text-[11px] text-slate-600 italic">{exp.location}</div>
+                  <ul className="list-disc list-outside ml-4 text-xs text-slate-800 space-y-1 font-sans">
+                    {(exp.highlights || []).map((h, i) => (
+                      <li key={i}>{h}</li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="text-[11px] text-slate-600 italic">{exp.location}</div>
-                <ul className="list-disc list-outside ml-4 text-xs text-slate-800 space-y-1 font-sans">
-                  {exp.highlights.map((h, i) => (
-                    <li key={i}>{h}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Projects */}
-        <div className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5">
-            Technical Projects
-          </h2>
-          <div className="space-y-3">
-            {profile.projects.map((proj) => (
-              <div key={proj.id} className="space-y-1">
-                <div className="flex justify-between font-bold text-xs text-slate-900">
-                  <span>{proj.title}</span>
-                  <span className="font-normal text-slate-600 font-sans text-[11px]">{proj.techStack.join(", ")}</span>
+        {(profile.projects || []).length > 0 && (
+          <div className="space-y-2">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5">
+              Technical Projects
+            </h2>
+            <div className="space-y-3">
+              {profile.projects.map((proj) => (
+                <div key={proj.id} className="space-y-1">
+                  <div className="flex justify-between font-bold text-xs text-slate-900">
+                    <span>{proj.title}</span>
+                    <span className="font-normal text-slate-600 font-sans text-[11px]">{(proj.techStack || []).join(", ")}</span>
+                  </div>
+                  <p className="text-xs text-slate-800 font-sans">{proj.description}</p>
+                  <ul className="list-disc list-outside ml-4 text-xs text-slate-800 space-y-0.5 font-sans">
+                    {(proj.highlights || []).map((h, i) => (
+                      <li key={i}>{h}</li>
+                    ))}
+                  </ul>
                 </div>
-                <p className="text-xs text-slate-800 font-sans">{proj.description}</p>
-                <ul className="list-disc list-outside ml-4 text-xs text-slate-800 space-y-0.5 font-sans">
-                  {proj.highlights.map((h, i) => (
-                    <li key={i}>{h}</li>
-                  ))}
-                </ul>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Education */}
+        {(profile.education || []).length > 0 && (
+          <div className="space-y-1.5">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5">
+              Education
+            </h2>
+            {profile.education.map((edu) => (
+              <div key={edu.id} className="flex justify-between text-xs text-slate-900 font-sans">
+                <div>
+                  <span className="font-bold font-serif">{edu.degree}</span> — {edu.institution}
+                </div>
+                <div>{edu.graduationYear} {edu.score ? `(${edu.score})` : ""}</div>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Education */}
-        <div className="space-y-1.5">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5">
-            Education
-          </h2>
-          {profile.education.map((edu) => (
-            <div key={edu.id} className="flex justify-between text-xs text-slate-900 font-sans">
-              <div>
-                <span className="font-bold font-serif">{edu.degree}</span> — {edu.institution}
-              </div>
-              <div>{edu.graduationYear} ({edu.score})</div>
-            </div>
-          ))}
-        </div>
+        )}
       </div>
     );
   }
@@ -332,7 +346,12 @@ export const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ profile, conne
           Skills & Technologies
         </h2>
         <div className="flex flex-wrap gap-1.5 pt-0.5">
-          {[...profile.skills.languages, ...profile.skills.frameworks, ...profile.skills.databases, ...profile.skills.tools].map((skill) => (
+          {[
+            ...(profile.skills?.languages || []),
+            ...(profile.skills?.frameworks || []),
+            ...(profile.skills?.databases || []),
+            ...(profile.skills?.tools || []),
+          ].map((skill) => (
             <span
               key={skill}
               className="bg-slate-100 text-slate-900 border border-slate-300 px-2.5 py-0.5 rounded text-[11px] font-semibold"
@@ -344,49 +363,53 @@ export const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ profile, conne
       </div>
 
       {/* Experience */}
-      <div className="space-y-2">
-        <h2 className="text-xs font-extrabold uppercase tracking-wider text-blue-700 border-b border-slate-200 pb-0.5">
-          Work Experience
-        </h2>
-        <div className="space-y-3">
-          {profile.experience.map((exp) => (
-            <div key={exp.id} className="space-y-1">
-              <div className="flex justify-between font-bold text-xs text-slate-900">
-                <span>{exp.role} &nbsp;<span className="font-normal text-slate-600">at {exp.company}</span></span>
-                <span className="text-slate-600 text-[11px] font-normal">{exp.startDate} – {exp.endDate}</span>
+      {(profile.experience || []).length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-xs font-extrabold uppercase tracking-wider text-blue-700 border-b border-slate-200 pb-0.5">
+            Work Experience
+          </h2>
+          <div className="space-y-3">
+            {profile.experience.map((exp) => (
+              <div key={exp.id} className="space-y-1">
+                <div className="flex justify-between font-bold text-xs text-slate-900">
+                  <span>{exp.role} &nbsp;<span className="font-normal text-slate-600">at {exp.company}</span></span>
+                  <span className="text-slate-600 text-[11px] font-normal">{exp.startDate} – {exp.endDate}</span>
+                </div>
+                <ul className="list-disc list-outside ml-4 text-slate-800 text-xs space-y-1">
+                  {(exp.highlights || []).map((h, i) => (
+                    <li key={i}>{h}</li>
+                  ))}
+                </ul>
               </div>
-              <ul className="list-disc list-outside ml-4 text-slate-800 text-xs space-y-1">
-                {exp.highlights.map((h, i) => (
-                  <li key={i}>{h}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Projects */}
-      <div className="space-y-2">
-        <h2 className="text-xs font-extrabold uppercase tracking-wider text-blue-700 border-b border-slate-200 pb-0.5">
-          Key Projects
-        </h2>
-        <div className="space-y-3">
-          {profile.projects.map((proj) => (
-            <div key={proj.id} className="space-y-1">
-              <div className="flex justify-between font-bold text-xs text-slate-900">
-                <span>{proj.title}</span>
-                <span className="text-slate-600 text-[11px] font-semibold">{proj.techStack.join(", ")}</span>
+      {(profile.projects || []).length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-xs font-extrabold uppercase tracking-wider text-blue-700 border-b border-slate-200 pb-0.5">
+            Key Projects
+          </h2>
+          <div className="space-y-3">
+            {profile.projects.map((proj) => (
+              <div key={proj.id} className="space-y-1">
+                <div className="flex justify-between font-bold text-xs text-slate-900">
+                  <span>{proj.title}</span>
+                  <span className="text-slate-600 text-[11px] font-semibold">{(proj.techStack || []).join(", ")}</span>
+                </div>
+                <p className="text-slate-700 text-xs">{proj.description}</p>
+                <ul className="list-disc list-outside ml-4 text-slate-800 text-xs space-y-0.5">
+                  {(proj.highlights || []).map((h, i) => (
+                    <li key={i}>{h}</li>
+                  ))}
+                </ul>
               </div>
-              <p className="text-slate-700 text-xs">{proj.description}</p>
-              <ul className="list-disc list-outside ml-4 text-slate-800 text-xs space-y-0.5">
-                {proj.highlights.map((h, i) => (
-                  <li key={i}>{h}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Education & Achievements */}
       <div className="grid grid-cols-2 gap-6 pt-2 border-t border-slate-300">
@@ -394,7 +417,7 @@ export const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ profile, conne
           <h2 className="text-xs font-extrabold uppercase tracking-wider text-blue-700 border-b border-slate-200 pb-0.5">
             Education
           </h2>
-          {profile.education.map((edu) => (
+          {(profile.education || []).map((edu) => (
             <div key={edu.id} className="text-xs">
               <p className="font-bold text-slate-900">{edu.degree}</p>
               <p className="text-[11px] text-slate-600">{edu.institution} ({edu.graduationYear})</p>
@@ -408,7 +431,7 @@ export const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ profile, conne
             Achievements
           </h2>
           <ul className="list-disc list-outside ml-4 text-slate-800 text-[11px] space-y-1">
-            {profile.achievements.map((a, i) => (
+            {(profile.achievements || []).map((a, i) => (
               <li key={i}>{a}</li>
             ))}
           </ul>
