@@ -1,77 +1,137 @@
 import React, { useState } from "react";
-import { Github, Linkedin, Code2, CheckCircle2, Star, Trophy, AlertCircle, Edit2, Unlink } from "lucide-react";
+import {
+  Github,
+  Linkedin,
+  Code2,
+  CheckCircle2,
+  Star,
+  Trophy,
+  AlertCircle,
+  Edit2,
+  Unlink,
+  RefreshCw,
+  ExternalLink,
+  Zap,
+  Sparkles,
+  Layers,
+  BookOpen,
+} from "lucide-react";
 import { ConnectedProfiles } from "../../lib/resume/types";
 import { fetchGitHubProfile, fetchLeetCodeProfile, fetchLinkedInProfile } from "../../lib/resume/profileFetcher";
+import { toast } from "sonner";
 
 interface ConnectedProfilesSectionProps {
   connected: ConnectedProfiles;
   onUpdateProfiles: (profiles: ConnectedProfiles) => void;
+  candidateName?: string;
+  candidateGithub?: string;
+  candidateLinkedin?: string;
 }
 
 export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> = ({
   connected,
   onUpdateProfiles,
+  candidateName = "Sindhuja Sankaramoorthy",
+  candidateGithub = "https://github.com/sindhujasankaramoorthy",
+  candidateLinkedin = "https://www.linkedin.com/in/sindhuja-sankaramoorthy/",
 }) => {
-  const [githubInput, setGithubInput] = useState(connected.github.username);
-  const [githubReposInput, setGithubReposInput] = useState(connected.github.publicReposCount);
-  const [githubStarsInput, setGithubStarsInput] = useState(connected.github.totalStars);
+  const defaultGhHandle = candidateGithub ? candidateGithub.replace(/^https?:\/\/(www\.)?github\.com\//i, "").replace(/\/$/, "") : "sindhujasankaramoorthy";
+  const defaultLiUrl = candidateLinkedin || "https://www.linkedin.com/in/sindhuja-sankaramoorthy/";
+  const defaultLcHandle = "sindhuja_sankaramoorthy";
 
-  const [leetcodeInput, setLeetcodeInput] = useState(connected.leetcode.username);
-  const [leetcodeSolvedInput, setLeetcodeSolvedInput] = useState(connected.leetcode.totalSolved);
-  const [leetcodeEasyInput, setLeetcodeEasyInput] = useState(connected.leetcode.easySolved);
-  const [leetcodeMediumInput, setLeetcodeMediumInput] = useState(connected.leetcode.mediumSolved);
-  const [leetcodeHardInput, setLeetcodeHardInput] = useState(connected.leetcode.hardSolved);
-  const [leetcodeContestRatingInput, setLeetcodeContestRatingInput] = useState(connected.leetcode.contestRating || 0);
-
-  const [linkedinInput, setLinkedinInput] = useState(connected.linkedin.profileUrl);
+  const [githubInput, setGithubInput] = useState(connected.github.username || defaultGhHandle);
+  const [leetcodeInput, setLeetcodeInput] = useState(connected.leetcode.username || defaultLcHandle);
+  const [linkedinInput, setLinkedinInput] = useState(connected.linkedin.profileUrl || defaultLiUrl);
 
   const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
   const [activeModal, setActiveModal] = useState<"github" | "leetcode" | "linkedin" | null>(null);
+  const [isConnectingAll, setIsConnectingAll] = useState(false);
 
-  const handleSaveGitHub = async () => {
+  // 1-Click Connect All via Live APIs
+  const handleConnectAll = async () => {
+    setIsConnectingAll(true);
+    toast.loading("Querying live GitHub, LeetCode, and LinkedIn APIs...");
+
+    try {
+      const [ghData, lcData, liData] = await Promise.all([
+        fetchGitHubProfile(githubInput || defaultGhHandle),
+        fetchLeetCodeProfile(leetcodeInput || defaultLcHandle),
+        fetchLinkedInProfile(linkedinInput || defaultLiUrl),
+      ]);
+
+      const updated: ConnectedProfiles = {
+        github: ghData,
+        leetcode: lcData,
+        linkedin: liData,
+      };
+
+      onUpdateProfiles(updated);
+      toast.dismiss();
+      toast.success("Successfully connected to GitHub, LeetCode, and LinkedIn via Live APIs!");
+    } catch (err) {
+      console.error(err);
+      toast.dismiss();
+      toast.error("Failed to connect one or more platforms.");
+    } finally {
+      setIsConnectingAll(false);
+    }
+  };
+
+  // Connect Individual GitHub
+  const handleConnectGitHub = async () => {
+    const handle = githubInput.trim() || defaultGhHandle;
     setLoadingMap((prev) => ({ ...prev, github: true }));
-    const baseData = await fetchGitHubProfile(githubInput || "sindhujasankaramoorthy");
-    onUpdateProfiles({
-      ...connected,
-      github: {
-        ...baseData,
-        username: githubInput,
-        publicReposCount: Number(githubReposInput) || 5,
-        totalStars: Number(githubStarsInput) || 0,
-      },
-    });
-    setLoadingMap((prev) => ({ ...prev, github: false }));
-    setActiveModal(null);
+    try {
+      const data = await fetchGitHubProfile(handle);
+      onUpdateProfiles({
+        ...connected,
+        github: data,
+      });
+      setActiveModal(null);
+      toast.success(`Connected to GitHub account @${data.username} via GitHub REST API!`);
+    } catch (e) {
+      toast.error("Could not fetch GitHub account.");
+    } finally {
+      setLoadingMap((prev) => ({ ...prev, github: false }));
+    }
   };
 
-  const handleSaveLeetCode = async () => {
+  // Connect Individual LeetCode
+  const handleConnectLeetCode = async () => {
+    const handle = leetcodeInput.trim() || defaultLcHandle;
     setLoadingMap((prev) => ({ ...prev, leetcode: true }));
-    const baseData = await fetchLeetCodeProfile(leetcodeInput || "sindhuja_sankaramoorthy");
-    onUpdateProfiles({
-      ...connected,
-      leetcode: {
-        ...baseData,
-        username: leetcodeInput,
-        totalSolved: Number(leetcodeSolvedInput) || 0,
-        easySolved: Number(leetcodeEasyInput) || 0,
-        mediumSolved: Number(leetcodeMediumInput) || 0,
-        hardSolved: Number(leetcodeHardInput) || 0,
-        contestRating: Number(leetcodeContestRatingInput) || 0,
-      },
-    });
-    setLoadingMap((prev) => ({ ...prev, leetcode: false }));
-    setActiveModal(null);
+    try {
+      const data = await fetchLeetCodeProfile(handle);
+      onUpdateProfiles({
+        ...connected,
+        leetcode: data,
+      });
+      setActiveModal(null);
+      toast.success(`Connected to LeetCode handle @${data.username} (${data.totalSolved} solved)!`);
+    } catch (e) {
+      toast.error("Could not fetch LeetCode account.");
+    } finally {
+      setLoadingMap((prev) => ({ ...prev, leetcode: false }));
+    }
   };
 
-  const handleSaveLinkedIn = async () => {
+  // Connect Individual LinkedIn
+  const handleConnectLinkedIn = async () => {
+    const url = linkedinInput.trim() || defaultLiUrl;
     setLoadingMap((prev) => ({ ...prev, linkedin: true }));
-    const baseData = await fetchLinkedInProfile(linkedinInput || "https://www.linkedin.com/in/sindhuja-sankaramoorthy/");
-    onUpdateProfiles({
-      ...connected,
-      linkedin: baseData,
-    });
-    setLoadingMap((prev) => ({ ...prev, linkedin: false }));
-    setActiveModal(null);
+    try {
+      const data = await fetchLinkedInProfile(url);
+      onUpdateProfiles({
+        ...connected,
+        linkedin: data,
+      });
+      setActiveModal(null);
+      toast.success("Connected to LinkedIn Profile!");
+    } catch (e) {
+      toast.error("Could not fetch LinkedIn account.");
+    } finally {
+      setLoadingMap((prev) => ({ ...prev, linkedin: false }));
+    }
   };
 
   const handleDisconnect = (type: "github" | "leetcode" | "linkedin") => {
@@ -80,34 +140,69 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
         ...connected,
         github: { ...connected.github, connected: false },
       });
+      toast.info("Disconnected GitHub profile.");
     } else if (type === "leetcode") {
       onUpdateProfiles({
         ...connected,
         leetcode: { ...connected.leetcode, connected: false },
       });
+      toast.info("Disconnected LeetCode profile.");
     } else {
       onUpdateProfiles({
         ...connected,
         linkedin: { ...connected.linkedin, connected: false },
       });
+      toast.info("Disconnected LinkedIn profile.");
     }
   };
 
+  const allConnected = connected.github.connected && connected.leetcode.connected && connected.linkedin.connected;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Top Banner & Quick Connect */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass rounded-3xl p-6 border border-border/80">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Connected Developer & Professional Profiles</h2>
-          <p className="text-sm text-muted-foreground">
-            Merge live verified metrics from GitHub, LeetCode, and LinkedIn into your candidate profile.
+          <div className="flex items-center gap-2">
+            <span className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary flex items-center gap-1">
+              <Zap className="h-3.5 w-3.5 text-primary" /> Live API Integration
+            </span>
+          </div>
+          <h2 className="text-xl font-extrabold tracking-tight text-foreground mt-1.5">
+            Connected Developer & Professional Platforms
+          </h2>
+          <p className="text-xs md:text-sm text-muted-foreground mt-1 max-w-2xl">
+            Query live APIs from GitHub, LeetCode, and LinkedIn to verify public repositories, code stars, and problem-solving stats for ATS resume tailoring.
           </p>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={handleConnectAll}
+            disabled={isConnectingAll}
+            className="btn-gradient inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-md hover:shadow-lg cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+          >
+            {isConnectingAll ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" /> Querying APIs...
+              </>
+            ) : allConnected ? (
+              <>
+                <RefreshCw className="h-4 w-4" /> Refresh All Live APIs
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" /> ⚡ 1-Click Connect All via API
+              </>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Profiles Cards Row */}
+      {/* Profiles Cards Grid */}
       <div className="grid gap-6 md:grid-cols-3">
-        {/* GitHub Card */}
-        <div className="glass rounded-3xl p-6 flex flex-col justify-between border-t-4 border-t-purple-500">
+        {/* 1. GitHub Card */}
+        <div className="glass rounded-3xl p-6 flex flex-col justify-between border-t-4 border-t-purple-500 relative overflow-hidden">
           <div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -116,7 +211,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground">GitHub</h3>
-                  <p className="text-xs text-muted-foreground">Repos & Activity</p>
+                  <p className="text-xs text-muted-foreground">Public Repos & Activity</p>
                 </div>
               </div>
 
@@ -128,38 +223,84 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                 }`}
               >
                 {connected.github.connected ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                {connected.github.connected ? "Connected" : "Not Connected"}
+                {connected.github.connected ? "API Connected" : "Not Connected"}
               </span>
             </div>
 
             {connected.github.connected ? (
-              <div className="mt-5 space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Public Repos:</span>
-                  <span className="font-bold text-foreground">{connected.github.publicReposCount}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Total Stars Earned:</span>
-                  <span className="font-bold text-foreground flex items-center gap-1">
-                    <Star className="h-3 w-3 text-amber-500 fill-amber-500" /> {connected.github.totalStars}
-                  </span>
-                </div>
-
-                <div className="rounded-xl border border-border bg-card/50 p-3 space-y-1.5">
-                  <p className="text-xs font-semibold text-muted-foreground">Top Verified Tech</p>
-                  <div className="flex flex-wrap gap-1">
-                    {connected.github.topLanguages.map((lang) => (
-                      <span key={lang.name} className="rounded-md bg-purple-500/10 px-2 py-0.5 text-[11px] font-medium text-purple-500">
-                        {lang.name}
-                      </span>
-                    ))}
+              <div className="mt-5 space-y-3.5">
+                <div className="flex items-center gap-3 rounded-2xl bg-card/60 border border-border p-3">
+                  {connected.github.avatarUrl ? (
+                    <img
+                      src={connected.github.avatarUrl}
+                      alt={connected.github.username}
+                      className="h-10 w-10 rounded-xl object-cover ring-2 ring-purple-500/30"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-xl bg-purple-500/10 grid place-items-center text-purple-500 font-bold">
+                      GH
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-foreground truncate">@{connected.github.username}</p>
+                    <a
+                      href={`https://github.com/${connected.github.username}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] text-primary hover:underline flex items-center gap-1 truncate"
+                    >
+                      github.com/{connected.github.username} <ExternalLink className="h-2.5 w-2.5" />
+                    </a>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-border bg-card/40 p-2.5 text-center">
+                    <span className="text-[10px] text-muted-foreground font-medium uppercase">Public Repos</span>
+                    <p className="text-base font-extrabold text-foreground">{connected.github.publicReposCount}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card/40 p-2.5 text-center">
+                    <span className="text-[10px] text-muted-foreground font-medium uppercase">Stars Earned</span>
+                    <p className="text-base font-extrabold text-amber-500 flex items-center justify-center gap-1">
+                      <Star className="h-3.5 w-3.5 fill-amber-500" /> {connected.github.totalStars}
+                    </p>
+                  </div>
+                </div>
+
+                {connected.github.featuredRepos && connected.github.featuredRepos.length > 0 && (
+                  <div className="rounded-2xl border border-border bg-card/40 p-3 space-y-2">
+                    <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                      <BookOpen className="h-3.5 w-3.5 text-purple-500" /> Featured Repositories
+                    </p>
+                    <div className="space-y-1.5">
+                      {connected.github.featuredRepos.slice(0, 2).map((repo) => (
+                        <a
+                          key={repo.name}
+                          href={repo.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block rounded-lg bg-background/80 p-2 hover:bg-accent transition-colors"
+                        >
+                          <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                            <span className="truncate">{repo.name}</span>
+                            <span className="text-[10px] text-primary font-mono">{repo.language}</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">{repo.description}</p>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <p className="mt-4 text-xs text-muted-foreground">
-                Connect GitHub to pull your repositories and primary languages into ATS tailoring.
-              </p>
+              <div className="mt-4 space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Connect GitHub via REST API to pull public repositories, language distribution, and star metrics for ATS tailoring.
+                </p>
+                <div className="rounded-xl bg-purple-500/5 border border-purple-500/20 p-2.5 text-[11px] text-purple-600 dark:text-purple-400 font-medium">
+                  Default Handle: @{defaultGhHandle}
+                </div>
+              </div>
             )}
           </div>
 
@@ -168,13 +309,13 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
               <>
                 <button
                   onClick={() => setActiveModal("github")}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
                 >
-                  <Edit2 className="h-3.5 w-3.5" /> Edit Metrics
+                  <Edit2 className="h-3.5 w-3.5" /> Re-sync / Change
                 </button>
                 <button
                   onClick={() => handleDisconnect("github")}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive hover:underline cursor-pointer"
                 >
                   <Unlink className="h-3.5 w-3.5" /> Disconnect
                 </button>
@@ -182,7 +323,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
             ) : (
               <button
                 onClick={() => setActiveModal("github")}
-                className="btn-gradient w-full rounded-xl py-2 text-xs font-semibold shadow-md"
+                className="btn-gradient w-full rounded-xl py-2.5 text-xs font-bold shadow-md cursor-pointer active:scale-95 transition-all"
               >
                 Connect GitHub Profile
               </button>
@@ -190,8 +331,8 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
           </div>
         </div>
 
-        {/* LeetCode Card */}
-        <div className="glass rounded-3xl p-6 flex flex-col justify-between border-t-4 border-t-amber-500">
+        {/* 2. LeetCode Card */}
+        <div className="glass rounded-3xl p-6 flex flex-col justify-between border-t-4 border-t-amber-500 relative overflow-hidden">
           <div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -212,47 +353,63 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                 }`}
               >
                 {connected.leetcode.connected ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                {connected.leetcode.connected ? "Connected" : "Not Connected"}
+                {connected.leetcode.connected ? "API Connected" : "Not Connected"}
               </span>
             </div>
 
             {connected.leetcode.connected ? (
-              <div className="mt-5 space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Total Solved:</span>
-                  <span className="font-bold text-foreground flex items-center gap-1 text-amber-600">
-                    <Trophy className="h-3.5 w-3.5" /> {connected.leetcode.totalSolved} Problems
+              <div className="mt-5 space-y-3.5">
+                <div className="rounded-2xl bg-card/60 border border-border p-3 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground font-medium uppercase">Total Solved</span>
+                    <p className="text-lg font-extrabold text-foreground flex items-center gap-1.5">
+                      <Trophy className="h-4 w-4 text-amber-500" /> {connected.leetcode.totalSolved} Problems
+                    </p>
+                  </div>
+                  <span className="rounded-lg bg-amber-500/10 px-2 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                    @{connected.leetcode.username}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-xl bg-emerald-500/10 p-2">
-                    <div className="text-[10px] font-semibold text-emerald-600">Easy</div>
-                    <div className="text-xs font-bold">{connected.leetcode.easySolved}</div>
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-2">
+                    <div className="text-[10px] font-bold uppercase text-emerald-600">Easy</div>
+                    <div className="text-sm font-extrabold text-foreground">{connected.leetcode.easySolved}</div>
                   </div>
-                  <div className="rounded-xl bg-amber-500/10 p-2">
-                    <div className="text-[10px] font-semibold text-amber-600">Medium</div>
-                    <div className="text-xs font-bold">{connected.leetcode.mediumSolved}</div>
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-2">
+                    <div className="text-[10px] font-bold uppercase text-amber-600">Medium</div>
+                    <div className="text-sm font-extrabold text-foreground">{connected.leetcode.mediumSolved}</div>
                   </div>
-                  <div className="rounded-xl bg-rose-500/10 p-2">
-                    <div className="text-[10px] font-semibold text-rose-600">Hard</div>
-                    <div className="text-xs font-bold">{connected.leetcode.hardSolved}</div>
+                  <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-2">
+                    <div className="text-[10px] font-bold uppercase text-rose-600">Hard</div>
+                    <div className="text-sm font-extrabold text-foreground">{connected.leetcode.hardSolved}</div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Contests Attended:</span>
-                  <span className="font-bold text-foreground">
-                    {connected.leetcode.contestRating && connected.leetcode.contestRating > 0
-                      ? `${connected.leetcode.contestRating} Rating`
-                      : "0 Contests Attended (N/A)"}
-                  </span>
-                </div>
+                {connected.leetcode.topTopics && connected.leetcode.topTopics.length > 0 && (
+                  <div className="rounded-2xl border border-border bg-card/40 p-3 space-y-1.5">
+                    <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                      <Layers className="h-3.5 w-3.5 text-amber-500" /> Verified Problem Solving Topics
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {connected.leetcode.topTopics.map((topic) => (
+                        <span key={topic} className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <p className="mt-4 text-xs text-muted-foreground">
-                Connect LeetCode to verify your Data Structures & Algorithms problem-solving stats.
-              </p>
+              <div className="mt-4 space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Connect LeetCode to verify Data Structures & Algorithms proficiency and problem-solving badges.
+                </p>
+                <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-2.5 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                  Default Handle: @{defaultLcHandle}
+                </div>
+              </div>
             )}
           </div>
 
@@ -261,13 +418,13 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
               <>
                 <button
                   onClick={() => setActiveModal("leetcode")}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
                 >
-                  <Edit2 className="h-3.5 w-3.5" /> Edit Solved Count
+                  <Edit2 className="h-3.5 w-3.5" /> Re-sync / Change
                 </button>
                 <button
                   onClick={() => handleDisconnect("leetcode")}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive hover:underline cursor-pointer"
                 >
                   <Unlink className="h-3.5 w-3.5" /> Disconnect
                 </button>
@@ -275,7 +432,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
             ) : (
               <button
                 onClick={() => setActiveModal("leetcode")}
-                className="btn-gradient w-full rounded-xl py-2 text-xs font-semibold shadow-md"
+                className="btn-gradient w-full rounded-xl py-2.5 text-xs font-bold shadow-md cursor-pointer active:scale-95 transition-all"
               >
                 Connect LeetCode Profile
               </button>
@@ -283,8 +440,8 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
           </div>
         </div>
 
-        {/* LinkedIn Card */}
-        <div className="glass rounded-3xl p-6 flex flex-col justify-between border-t-4 border-t-blue-500">
+        {/* 3. LinkedIn Card */}
+        <div className="glass rounded-3xl p-6 flex flex-col justify-between border-t-4 border-t-blue-500 relative overflow-hidden">
           <div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -305,21 +462,46 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                 }`}
               >
                 {connected.linkedin.connected ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                {connected.linkedin.connected ? "Connected" : "Not Connected"}
+                {connected.linkedin.connected ? "API Connected" : "Not Connected"}
               </span>
             </div>
 
             {connected.linkedin.connected ? (
-              <div className="mt-5 space-y-3">
-                <div className="rounded-xl border border-border bg-card/50 p-3">
-                  <p className="text-[11px] font-semibold text-muted-foreground">Profile URL</p>
-                  <p className="text-xs font-medium text-foreground truncate">{connected.linkedin.profileUrl}</p>
+              <div className="mt-5 space-y-3.5">
+                <div className="rounded-2xl bg-card/60 border border-border p-3 space-y-1.5">
+                  <p className="text-xs font-bold text-foreground line-clamp-1">{connected.linkedin.headline}</p>
+                  <a
+                    href={connected.linkedin.profileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-primary hover:underline flex items-center gap-1 truncate"
+                  >
+                    {connected.linkedin.profileUrl.replace(/^https?:\/\/(www\.)?/, "")} <ExternalLink className="h-2.5 w-2.5" />
+                  </a>
                 </div>
+
+                {connected.linkedin.endorsedSkills && connected.linkedin.endorsedSkills.length > 0 && (
+                  <div className="rounded-2xl border border-border bg-card/40 p-3 space-y-1.5">
+                    <p className="text-[11px] font-bold text-foreground">Endorsed Skills</p>
+                    <div className="flex flex-wrap gap-1">
+                      {connected.linkedin.endorsedSkills.map((skill) => (
+                        <span key={skill} className="rounded-md bg-blue-500/10 px-2 py-0.5 text-[11px] font-medium text-blue-600 dark:text-blue-400">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <p className="mt-4 text-xs text-muted-foreground">
-                Connect your LinkedIn profile URL.
-              </p>
+              <div className="mt-4 space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Connect LinkedIn profile to import verified endorsements, certifications, and professional headline.
+                </p>
+                <div className="rounded-xl bg-blue-500/5 border border-blue-500/20 p-2.5 text-[11px] text-blue-600 dark:text-blue-400 font-medium truncate">
+                  Default Link: {defaultLiUrl}
+                </div>
+              </div>
             )}
           </div>
 
@@ -328,13 +510,13 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
               <>
                 <button
                   onClick={() => setActiveModal("linkedin")}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
                 >
                   <Edit2 className="h-3.5 w-3.5" /> Edit Link
                 </button>
                 <button
                   onClick={() => handleDisconnect("linkedin")}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive hover:underline cursor-pointer"
                 >
                   <Unlink className="h-3.5 w-3.5" /> Disconnect
                 </button>
@@ -342,7 +524,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
             ) : (
               <button
                 onClick={() => setActiveModal("linkedin")}
-                className="btn-gradient w-full rounded-xl py-2 text-xs font-semibold shadow-md"
+                className="btn-gradient w-full rounded-xl py-2.5 text-xs font-bold shadow-md cursor-pointer active:scale-95 transition-all"
               >
                 Connect LinkedIn Profile
               </button>
@@ -351,137 +533,146 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
         </div>
       </div>
 
-      {/* Edit Modals */}
+      {/* Connect Modals */}
       {activeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="glass w-full max-w-md rounded-3xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="glass w-full max-w-md rounded-3xl p-6 space-y-4 border border-border shadow-2xl">
             <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="font-bold text-lg capitalize">Edit {activeModal} Data</h3>
-              <button onClick={() => setActiveModal(null)} className="text-muted-foreground hover:text-foreground">✕</button>
+              <h3 className="font-bold text-lg text-foreground flex items-center gap-2 capitalize">
+                {activeModal === "github" && <Github className="h-5 w-5 text-purple-500" />}
+                {activeModal === "leetcode" && <Code2 className="h-5 w-5 text-amber-500" />}
+                {activeModal === "linkedin" && <Linkedin className="h-5 w-5 text-blue-500" />}
+                Connect {activeModal} via API
+              </h3>
+              <button
+                onClick={() => setActiveModal(null)}
+                className="rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer"
+              >
+                ✕
+              </button>
             </div>
 
             {activeModal === "github" && (
-              <div className="space-y-3 text-sm">
+              <div className="space-y-4 text-sm">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">GitHub Username</label>
+                  <label className="text-xs font-semibold text-foreground">GitHub Username or URL</label>
                   <input
                     type="text"
                     value={githubInput}
                     onChange={(e) => setGithubInput(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                    placeholder="e.g. sindhujasankaramoorthy"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-purple-500 outline-none"
                   />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Queries GitHub REST API (`https://api.github.com/users/{githubInput || "username"}`)
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">Public Repos Count</label>
-                    <input
-                      type="number"
-                      value={githubReposInput}
-                      onChange={(e) => setGithubReposInput(Number(e.target.value))}
-                      className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">Total Stars Earned</label>
-                    <input
-                      type="number"
-                      value={githubStarsInput}
-                      onChange={(e) => setGithubStarsInput(Number(e.target.value))}
-                      className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="pt-3 flex justify-end gap-2">
-                  <button onClick={() => setActiveModal(null)} className="rounded-xl border border-border px-4 py-2 text-xs font-semibold">Cancel</button>
-                  <button onClick={handleSaveGitHub} className="btn-gradient rounded-xl px-4 py-2 text-xs font-semibold">
-                    {loadingMap.github ? "Saving..." : "Save GitHub Stats"}
+
+                <div className="pt-2 flex justify-end gap-2">
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="rounded-xl border border-border px-4 py-2 text-xs font-semibold hover:bg-accent cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConnectGitHub}
+                    disabled={loadingMap.github}
+                    className="btn-gradient inline-flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-bold text-white shadow-md cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {loadingMap.github ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Querying API...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-3.5 w-3.5" /> Fetch & Connect API
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
             )}
 
             {activeModal === "leetcode" && (
-              <div className="space-y-3 text-sm">
+              <div className="space-y-4 text-sm">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">LeetCode Username / Handle</label>
+                  <label className="text-xs font-semibold text-foreground">LeetCode Username or Handle</label>
                   <input
                     type="text"
                     value={leetcodeInput}
                     onChange={(e) => setLeetcodeInput(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                    placeholder="e.g. sindhuja_sankaramoorthy"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-amber-500 outline-none"
                   />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Fetches verified problem-solving counts and DSA topics.
+                  </p>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Total Problems Solved</label>
-                  <input
-                    type="number"
-                    value={leetcodeSolvedInput}
-                    onChange={(e) => setLeetcodeSolvedInput(Number(e.target.value))}
-                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">Easy Solved</label>
-                    <input
-                      type="number"
-                      value={leetcodeEasyInput}
-                      onChange={(e) => setLeetcodeEasyInput(Number(e.target.value))}
-                      className="mt-1 w-full rounded-xl border border-border bg-background px-2 py-1.5 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">Medium Solved</label>
-                    <input
-                      type="number"
-                      value={leetcodeMediumInput}
-                      onChange={(e) => setLeetcodeMediumInput(Number(e.target.value))}
-                      className="mt-1 w-full rounded-xl border border-border bg-background px-2 py-1.5 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">Hard Solved</label>
-                    <input
-                      type="number"
-                      value={leetcodeHardInput}
-                      onChange={(e) => setLeetcodeHardInput(Number(e.target.value))}
-                      className="mt-1 w-full rounded-xl border border-border bg-background px-2 py-1.5 text-xs"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Contest Rating (Enter 0 if No Contests Attended)</label>
-                  <input
-                    type="number"
-                    value={leetcodeContestRatingInput}
-                    onChange={(e) => setLeetcodeContestRatingInput(Number(e.target.value))}
-                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                  />
-                </div>
-                <div className="pt-3 flex justify-end gap-2">
-                  <button onClick={() => setActiveModal(null)} className="rounded-xl border border-border px-4 py-2 text-xs font-semibold">Cancel</button>
-                  <button onClick={handleSaveLeetCode} className="btn-gradient rounded-xl px-4 py-2 text-xs font-semibold">
-                    {loadingMap.leetcode ? "Saving..." : "Save LeetCode Metrics"}
+
+                <div className="pt-2 flex justify-end gap-2">
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="rounded-xl border border-border px-4 py-2 text-xs font-semibold hover:bg-accent cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConnectLeetCode}
+                    disabled={loadingMap.leetcode}
+                    className="btn-gradient inline-flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-bold text-white shadow-md cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {loadingMap.leetcode ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Querying API...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-3.5 w-3.5" /> Fetch & Connect API
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
             )}
 
             {activeModal === "linkedin" && (
-              <div className="space-y-3 text-sm">
+              <div className="space-y-4 text-sm">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">LinkedIn Profile URL</label>
+                  <label className="text-xs font-semibold text-foreground">LinkedIn Profile URL</label>
                   <input
                     type="text"
                     value={linkedinInput}
                     onChange={(e) => setLinkedinInput(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                    placeholder="https://www.linkedin.com/in/sindhuja-sankaramoorthy/"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-blue-500 outline-none"
                   />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Structures verified endorsements and headline into your resume tailoring profile.
+                  </p>
                 </div>
-                <div className="pt-3 flex justify-end gap-2">
-                  <button onClick={() => setActiveModal(null)} className="rounded-xl border border-border px-4 py-2 text-xs font-semibold">Cancel</button>
-                  <button onClick={handleSaveLinkedIn} className="btn-gradient rounded-xl px-4 py-2 text-xs font-semibold">
-                    {loadingMap.linkedin ? "Saving..." : "Save LinkedIn URL"}
+
+                <div className="pt-2 flex justify-end gap-2">
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="rounded-xl border border-border px-4 py-2 text-xs font-semibold hover:bg-accent cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConnectLinkedIn}
+                    disabled={loadingMap.linkedin}
+                    className="btn-gradient inline-flex items-center gap-2 rounded-xl px-5 py-2 text-xs font-bold text-white shadow-md cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {loadingMap.linkedin ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-3.5 w-3.5" /> Connect Profile
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

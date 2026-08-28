@@ -67,7 +67,14 @@ function ResumePage() {
     }
   });
 
-  const [connectedProfiles, setConnectedProfiles] = useState<ConnectedProfiles>(initialConnectedProfiles);
+  const [connectedProfiles, setConnectedProfiles] = useState<ConnectedProfiles>(() => {
+    try {
+      const saved = localStorage.getItem("placify_connected_profiles");
+      return saved ? JSON.parse(saved) : initialConnectedProfiles;
+    } catch {
+      return initialConnectedProfiles;
+    }
+  });
   const [jobs, setJobs] = useState<JobOpportunity[]>(sampleJobsDataset);
 
   const [analyzingJob, setAnalyzingJob] = useState<JobOpportunity | null>(null);
@@ -98,6 +105,14 @@ function ResumePage() {
       console.error(e);
     }
   }, [profile]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("placify_connected_profiles", JSON.stringify(connectedProfiles));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [connectedProfiles]);
 
   const handleUpdateResume = async (res: BaseResume, prof: CandidateProfile) => {
     setBaseResume(res);
@@ -237,6 +252,9 @@ function ResumePage() {
         <ConnectedProfilesSection
           connected={connectedProfiles}
           onUpdateProfiles={(updated) => setConnectedProfiles(updated)}
+          candidateName={profile?.name}
+          candidateGithub={profile?.githubUrl}
+          candidateLinkedin={profile?.linkedinUrl}
         />
       )}
 
