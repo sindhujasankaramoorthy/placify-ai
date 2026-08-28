@@ -51,6 +51,18 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
   const [activeModal, setActiveModal] = useState<"github" | "leetcode" | "linkedin" | "all_repos" | null>(null);
   const [isConnectingAll, setIsConnectingAll] = useState(false);
 
+  // Auto-upgrade repository list if old cache had less than 10 repos
+  React.useEffect(() => {
+    if (connected.github.connected && (!connected.github.featuredRepos || connected.github.featuredRepos.length < 10)) {
+      fetchGitHubProfile(connected.github.username || defaultGhHandle).then((ghData) => {
+        onUpdateProfiles({
+          ...connected,
+          github: ghData,
+        });
+      });
+    }
+  }, [connected.github.connected, connected.github.featuredRepos?.length]);
+
   // Search & Filter for All Repos
   const [repoSearch, setRepoSearch] = useState("");
   const [selectedLang, setSelectedLang] = useState<string>("All");

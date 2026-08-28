@@ -70,7 +70,14 @@ function ResumePage() {
   const [connectedProfiles, setConnectedProfiles] = useState<ConnectedProfiles>(() => {
     try {
       const saved = localStorage.getItem("placify_connected_profiles");
-      return saved ? JSON.parse(saved) : initialConnectedProfiles;
+      if (!saved) return initialConnectedProfiles;
+      const parsed = JSON.parse(saved) as ConnectedProfiles;
+      // If old cached profile has less than 12 repos, auto-purge to fetch full repository list
+      if (!parsed.github?.featuredRepos || parsed.github.featuredRepos.length < 10) {
+        localStorage.removeItem("placify_connected_profiles");
+        return initialConnectedProfiles;
+      }
+      return parsed;
     } catch {
       return initialConnectedProfiles;
     }
