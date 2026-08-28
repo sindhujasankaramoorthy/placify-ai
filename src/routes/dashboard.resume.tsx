@@ -30,6 +30,7 @@ function ResumePage() {
 
   // Base resume & candidate profile initialized as null unless saved in localStorage
   const [profile, setProfile] = useState<CandidateProfile | null>(() => {
+    if (typeof window === "undefined") return null;
     try {
       const saved = localStorage.getItem("placify_candidate_profile");
       if (!saved) return null;
@@ -57,6 +58,7 @@ function ResumePage() {
   });
 
   const [baseResume, setBaseResume] = useState<BaseResume | null>(() => {
+    if (typeof window === "undefined") return null;
     try {
       const savedProf = localStorage.getItem("placify_candidate_profile");
       if (!savedProf) return null;
@@ -68,6 +70,7 @@ function ResumePage() {
   });
 
   const [connectedProfiles, setConnectedProfiles] = useState<ConnectedProfiles>(() => {
+    if (typeof window === "undefined") return initialConnectedProfiles;
     try {
       const saved = localStorage.getItem("placify_connected_profiles");
       if (!saved) return initialConnectedProfiles;
@@ -94,6 +97,7 @@ function ResumePage() {
 
   // Sync to localStorage
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try {
       if (baseResume) {
         localStorage.setItem("placify_base_resume", JSON.stringify(baseResume));
@@ -106,6 +110,7 @@ function ResumePage() {
   }, [baseResume]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try {
       if (profile) {
         localStorage.setItem("placify_candidate_profile", JSON.stringify(profile));
@@ -118,6 +123,7 @@ function ResumePage() {
   }, [profile]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try {
       localStorage.setItem("placify_connected_profiles", JSON.stringify(connectedProfiles));
     } catch (e) {

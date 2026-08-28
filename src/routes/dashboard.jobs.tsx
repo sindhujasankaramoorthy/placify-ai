@@ -79,6 +79,7 @@ function JobsPage() {
 
   // Saved / Bookmarked & Applied State
   const [bookmarkedJobs, setBookmarkedJobs] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
     try {
       const saved = localStorage.getItem("placify_saved_jobs");
       return saved ? JSON.parse(saved) : [];
@@ -88,6 +89,7 @@ function JobsPage() {
   });
 
   const [appliedJobs, setAppliedJobs] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
     try {
       const applied = localStorage.getItem("placify_applied_jobs");
       return applied ? JSON.parse(applied) : [];
@@ -102,6 +104,7 @@ function JobsPage() {
   const [customNaukriLocation, setCustomNaukriLocation] = useState("Bengaluru");
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try {
       localStorage.setItem("placify_saved_jobs", JSON.stringify(bookmarkedJobs));
     } catch (e) {
@@ -110,6 +113,7 @@ function JobsPage() {
   }, [bookmarkedJobs]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try {
       localStorage.setItem("placify_applied_jobs", JSON.stringify(appliedJobs));
     } catch (e) {
