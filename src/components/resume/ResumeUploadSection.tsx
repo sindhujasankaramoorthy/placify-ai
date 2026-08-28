@@ -363,26 +363,34 @@ export const ResumeUploadSection: React.FC<ResumeUploadSectionProps> = ({
               )}
             </div>
 
-            {/* Work Experience */}
-            <div className="rounded-2xl border border-border bg-card/40 p-4 space-y-2.5 lg:col-span-2">
-              <div className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                <Briefcase className="h-3.5 w-3.5" /> Extracted Work Experience
+            {/* Key Technical Projects */}
+            <div className="rounded-2xl border border-border bg-card/40 p-4 space-y-3 lg:col-span-2">
+              <div className="text-xs font-bold uppercase tracking-wider text-primary flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-primary" /> Key Technical Projects ({profile.projects.length})
+                </span>
               </div>
               <div className="space-y-3">
-                {profile.experience.length > 0 ? (
-                  profile.experience.map((exp) => (
-                    <div key={exp.id} className="border-l-2 border-primary/30 pl-3">
-                      <div className="flex justify-between text-xs">
-                        <span className="font-semibold text-foreground">{exp.role} @ {exp.company}</span>
-                        <span className="text-muted-foreground">{exp.startDate} - {exp.endDate}</span>
+                {profile.projects.length > 0 ? (
+                  profile.projects.map((proj, idx) => (
+                    <div key={proj.id || idx} className="border-l-2 border-primary/40 pl-3 py-0.5">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-foreground">{idx + 1}) {proj.title}</h4>
+                        {proj.techStack && proj.techStack.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {proj.techStack.map(t => (
+                              <span key={t} className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      {exp.highlights.length > 0 && (
-                        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{exp.highlights[0]}</p>
-                      )}
+                      <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{proj.description}</p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-muted-foreground italic">No prior work experience listed (Fresher / Student Profile)</p>
+                  <p className="text-xs text-muted-foreground italic">No projects listed</p>
                 )}
               </div>
             </div>
@@ -390,15 +398,21 @@ export const ResumeUploadSection: React.FC<ResumeUploadSectionProps> = ({
             {/* Achievements & Certifications */}
             <div className="rounded-2xl border border-border bg-card/40 p-4 space-y-2.5">
               <div className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                <Award className="h-3.5 w-3.5" /> Certifications & Awards
+                <Award className="h-3.5 w-3.5" /> Certifications & Courses
               </div>
               {profile.certifications.length > 0 || profile.achievements.length > 0 ? (
-                <ul className="text-xs space-y-1.5 text-muted-foreground list-disc list-inside">
-                  {profile.certifications.map((c) => (
-                    <li key={c.id} className="truncate">{c.name} {c.issuer ? `(${c.issuer})` : ""}</li>
+                <ul className="text-xs space-y-2 text-muted-foreground">
+                  {profile.certifications.map((c, idx) => (
+                    <li key={c.id || idx} className="flex items-start gap-1.5">
+                      <span className="font-bold text-primary shrink-0">{idx + 1})</span>
+                      <span className="text-foreground">{c.name}</span>
+                    </li>
                   ))}
                   {profile.achievements.map((a, i) => (
-                    <li key={i} className="truncate">{a}</li>
+                    <li key={i} className="flex items-start gap-1.5">
+                      <span className="font-bold text-primary shrink-0">•</span>
+                      <span>{a}</span>
+                    </li>
                   ))}
                 </ul>
               ) : (
