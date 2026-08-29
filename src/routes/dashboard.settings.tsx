@@ -193,8 +193,24 @@ function SettingsPage() {
                 <button
                   key={themeOpt.id}
                   onClick={() => {
-                    setSettings({ ...settings, theme: themeOpt.id as any });
-                    toast.info(`Theme set to ${themeOpt.label}`);
+                    const newTheme = themeOpt.id as "light" | "dark" | "system";
+                    const newSettings = { ...settings, theme: newTheme };
+                    setSettings(newSettings);
+                    localStorage.setItem("placify_settings", JSON.stringify(newSettings));
+                    
+                    if (typeof document !== "undefined") {
+                      if (newTheme === "dark") {
+                        document.documentElement.classList.add("dark");
+                      } else if (newTheme === "light") {
+                        document.documentElement.classList.remove("dark");
+                      } else {
+                        const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                        document.documentElement.classList.toggle("dark", systemPrefersDark);
+                      }
+                    }
+                    
+                    window.dispatchEvent(new Event("theme-changed"));
+                    toast.success(`Theme set to ${themeOpt.label}`);
                   }}
                   className={`rounded-xl border p-3 text-center text-xs font-bold transition-all cursor-pointer ${
                     settings.theme === themeOpt.id

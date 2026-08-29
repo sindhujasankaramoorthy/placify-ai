@@ -115,6 +115,35 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    const applyTheme = () => {
+      if (typeof window === "undefined") return;
+      try {
+        const saved = localStorage.getItem("placify_settings");
+        const settings = saved ? JSON.parse(saved) : null;
+        const theme = settings?.theme || "light";
+        
+        if (theme === "dark") {
+          document.documentElement.classList.add("dark");
+        } else if (theme === "light") {
+          document.documentElement.classList.remove("dark");
+        } else if (theme === "system") {
+          const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.classList.toggle("dark", systemPrefersDark);
+        }
+      } catch (e) {
+        console.error("Theme sync failed", e);
+      }
+    };
+
+    applyTheme();
+
+    window.addEventListener("theme-changed", applyTheme);
+    return () => {
+      window.removeEventListener("theme-changed", applyTheme);
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
