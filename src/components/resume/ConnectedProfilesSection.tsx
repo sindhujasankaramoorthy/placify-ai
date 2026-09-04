@@ -21,7 +21,7 @@ import {
   Filter,
 } from "lucide-react";
 import { ConnectedProfiles } from "../../lib/resume/types";
-import { fetchGitHubProfile, fetchLeetCodeProfile, fetchLinkedInProfile } from "../../lib/resume/profileFetcher";
+import { fetchGitHubProfile, fetchLeetCodeProfile, fetchLinkedInProfile, ALFA_LEETCODE_API_BASE_URL } from "../../lib/resume/profileFetcher";
 import { toast } from "sonner";
 
 interface ConnectedProfilesSectionProps {
@@ -432,7 +432,18 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                   <Code2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground">LeetCode</h3>
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="font-bold text-foreground">LeetCode</h3>
+                    <a
+                      href="https://github.com/alfaarghya/alfa-leetcode-api"
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Powered by alfa-leetcode-api"
+                      className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-colors"
+                    >
+                      alfa-api <ExternalLink className="h-2 w-2" />
+                    </a>
+                  </div>
                   <p className="text-xs text-muted-foreground">DSA & Problem Solving</p>
                 </div>
               </div>
@@ -458,22 +469,35 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
             {connected.leetcode.connected ? (
               <div className="mt-5 space-y-3.5">
                 <div className="rounded-2xl bg-card/60 border border-border p-3 flex items-center justify-between">
-                  <div>
+                  <div className="space-y-0.5">
                     <span className="text-[10px] text-muted-foreground font-medium uppercase">Total Solved</span>
                     <p className="text-lg font-extrabold text-foreground flex items-center gap-1.5">
                       <Trophy className="h-4 w-4 text-amber-500" /> {connected.leetcode.totalSolved} Problems
                     </p>
+                    {connected.leetcode.ranking > 0 && (
+                      <p className="text-[10px] text-muted-foreground">
+                        Global Rank: <span className="font-semibold text-foreground">#{connected.leetcode.ranking.toLocaleString()}</span>
+                      </p>
+                    )}
                   </div>
-                  <a
-                    href={`https://leetcode.com/u/${connected.leetcode.username}/`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-lg bg-amber-500/10 px-2 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
-                  >
-                    @{connected.leetcode.username} <ExternalLink className="h-2.5 w-2.5" />
-                  </a>
+                  <div className="text-right space-y-1">
+                    <a
+                      href={`https://leetcode.com/u/${connected.leetcode.username}/`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex rounded-lg bg-amber-500/10 px-2 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline items-center gap-1"
+                    >
+                      @{connected.leetcode.username} <ExternalLink className="h-2.5 w-2.5" />
+                    </a>
+                    {connected.leetcode.contestRating && connected.leetcode.contestRating > 0 ? (
+                      <div className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
+                        Contest: {connected.leetcode.contestRating}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
 
+                {/* Easy, Medium, Hard Breakdown */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-2">
                     <div className="text-[10px] font-bold uppercase text-emerald-600">Easy</div>
@@ -489,28 +513,43 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                   </div>
                 </div>
 
+                {/* Progress Bar of Difficulty Distribution */}
+                {connected.leetcode.totalSolved > 0 && (
+                  <div className="w-full bg-secondary/50 rounded-full h-1.5 flex overflow-hidden">
+                    <div
+                      style={{ width: `${Math.round((connected.leetcode.easySolved / connected.leetcode.totalSolved) * 100)}%` }}
+                      className="bg-emerald-500 h-full"
+                      title={`Easy: ${connected.leetcode.easySolved}`}
+                    />
+                    <div
+                      style={{ width: `${Math.round((connected.leetcode.mediumSolved / connected.leetcode.totalSolved) * 100)}%` }}
+                      className="bg-amber-500 h-full"
+                      title={`Medium: ${connected.leetcode.mediumSolved}`}
+                    />
+                    <div
+                      style={{ width: `${Math.round((connected.leetcode.hardSolved / connected.leetcode.totalSolved) * 100)}%` }}
+                      className="bg-rose-500 h-full"
+                      title={`Hard: ${connected.leetcode.hardSolved}`}
+                    />
+                  </div>
+                )}
+
                 {/* Quick handle switch */}
                 <div className="flex items-center justify-between rounded-xl bg-card/40 border border-border p-2 text-[11px]">
-                  <span className="text-muted-foreground font-medium">Switch Profile:</span>
+                  <span className="text-muted-foreground font-medium">Quick Profiles:</span>
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => {
-                        onUpdateProfiles({
-                          ...connected,
-                          leetcode: {
-                            connected: true,
-                            username: "sindhujas",
-                            totalSolved: 24,
-                            easySolved: 24,
-                            mediumSolved: 0,
-                            hardSolved: 0,
-                            ranking: 4042839,
-                            contestRating: 56,
-                            topTopics: ["Arrays & Hashing", "Problem Solving", "Strings"],
-                          },
-                        });
-                        toast.success("Switched to @sindhujas (24 Problems Solved)!");
+                      onClick={async () => {
+                        setLoadingMap((prev) => ({ ...prev, leetcode: true }));
+                        try {
+                          const data = await fetchLeetCodeProfile("sindhujas");
+                          onUpdateProfiles({ ...connected, leetcode: data });
+                          toast.success(`Connected @sindhujas (${data.totalSolved} Solved)!`);
+                        } finally {
+                          setLoadingMap((prev) => ({ ...prev, leetcode: false }));
+                        }
                       }}
+                      disabled={loadingMap.leetcode}
                       className={`rounded-lg px-2 py-0.5 text-[10px] font-bold cursor-pointer transition-all ${
                         connected.leetcode.username === "sindhujas"
                           ? "bg-emerald-500 text-white shadow-sm"
@@ -520,23 +559,17 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                       @sindhujas (24)
                     </button>
                     <button
-                      onClick={() => {
-                        onUpdateProfiles({
-                          ...connected,
-                          leetcode: {
-                            connected: true,
-                            username: "sindhujasankaramoorthy",
-                            totalSolved: 0,
-                            easySolved: 0,
-                            mediumSolved: 0,
-                            hardSolved: 0,
-                            ranking: 0,
-                            contestRating: 0,
-                            topTopics: ["Problem Solving", "Java", "C", "Python"],
-                          },
-                        });
-                        toast.success("Switched to @sindhujasankaramoorthy!");
+                      onClick={async () => {
+                        setLoadingMap((prev) => ({ ...prev, leetcode: true }));
+                        try {
+                          const data = await fetchLeetCodeProfile("sindhujasankaramoorthy");
+                          onUpdateProfiles({ ...connected, leetcode: data });
+                          toast.success(`Connected @sindhujasankaramoorthy!`);
+                        } finally {
+                          setLoadingMap((prev) => ({ ...prev, leetcode: false }));
+                        }
                       }}
+                      disabled={loadingMap.leetcode}
                       className={`rounded-lg px-2 py-0.5 text-[10px] font-bold cursor-pointer transition-all ${
                         connected.leetcode.username === "sindhujasankaramoorthy"
                           ? "bg-amber-500 text-white shadow-sm"
@@ -551,7 +584,7 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                 {connected.leetcode.topTopics && connected.leetcode.topTopics.length > 0 && (
                   <div className="rounded-2xl border border-border bg-card/40 p-3 space-y-1.5">
                     <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
-                      <Layers className="h-3.5 w-3.5 text-amber-500" /> Problem Solving Topics
+                      <Layers className="h-3.5 w-3.5 text-amber-500" /> Problem Solving Topics (Verified)
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {connected.leetcode.topTopics.map((topic) => (
@@ -960,9 +993,17 @@ export const ConnectedProfilesSection: React.FC<ConnectedProfilesSectionProps> =
                     placeholder="e.g. sindhujasankaramoorthy or sindhujas"
                     className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-amber-500 outline-none"
                   />
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    Queries live LeetCode APIs. Enter your handle to pull live metrics.
-                  </p>
+                  <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>Connected via alfa-leetcode-api</span>
+                    <a
+                      href="https://github.com/alfaarghya/alfa-leetcode-api"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-amber-600 dark:text-amber-400 font-semibold hover:underline inline-flex items-center gap-1"
+                    >
+                      API Docs <ExternalLink className="h-2.5 w-2.5" />
+                    </a>
+                  </div>
                 </div>
 
                 <div className="rounded-2xl border border-border bg-card/60 p-3 space-y-2">

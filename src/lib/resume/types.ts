@@ -84,6 +84,13 @@ export interface LeetCodeData {
   ranking: number;
   contestRating?: number;
   topTopics: string[];
+  avatarUrl?: string;
+  realName?: string;
+  reputation?: number;
+  badgesCount?: number;
+  contestGlobalRanking?: number;
+  attendedContestsCount?: number;
+  submissionCalendar?: Record<string, number>;
 }
 
 export interface LinkedInData {
