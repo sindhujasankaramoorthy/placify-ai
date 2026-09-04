@@ -1,9 +1,28 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Upload, Link2, FileSpreadsheet, Sparkles, FileEdit, ShieldCheck } from "lucide-react";
-import { BaseResume, CandidateProfile, ConnectedProfiles, JobOpportunity, TailoredResume } from "../lib/resume/types";
+import {
+  Upload,
+  Link2,
+  FileSpreadsheet,
+  Sparkles,
+  FileEdit,
+  ShieldCheck,
+  LayoutTemplate,
+  ArrowRight,
+} from "lucide-react";
+import {
+  BaseResume,
+  CandidateProfile,
+  ConnectedProfiles,
+  JobOpportunity,
+  TailoredResume,
+} from "../lib/resume/types";
 import { emptyCandidateProfile } from "../lib/resume/parser";
-import { initialConnectedProfiles } from "../lib/resume/profileFetcher";
+import {
+  initialConnectedProfiles,
+  fetchGitHubProfile,
+  fetchLinkedInProfile,
+} from "../lib/resume/profileFetcher";
 import { sampleJobsDataset } from "../lib/resume/excelParser";
 import { generateTailoredResume } from "../lib/resume/tailorEngine";
 import { ResumeUploadSection } from "../components/resume/ResumeUploadSection";
@@ -11,13 +30,22 @@ import { ConnectedProfilesSection } from "../components/resume/ConnectedProfiles
 import { JobDirectorySection } from "../components/resume/JobDirectorySection";
 import { JobAnalysisModal } from "../components/resume/JobAnalysisModal";
 import { ResumeEditorSection } from "../components/resume/ResumeEditorSection";
+import { ResumeBuilderContainer } from "../components/resume/ResumeBuilderContainer";
+import {
+  candidateProfileToResumeData,
+  resumeDataToCandidateProfile,
+} from "../types/resume";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/resume")({
   head: () => ({
     meta: [
       { title: "Resume AI Studio — Placify AI" },
-      { name: "description", content: "AI-powered job description resume tailoring & connected developer profile suite." },
+      {
+        name: "description",
+        content:
+          "AI-powered 10-template resume builder, job description tailoring & connected developer profile suite.",
+      },
       { property: "og:title", content: "Resume AI Studio — Placify AI" },
     ],
   }),
@@ -25,10 +53,12 @@ export const Route = createFileRoute("/dashboard/resume")({
 });
 
 function ResumePage() {
-  // Global State
-  const [activeTab, setActiveTab] = useState<"upload" | "profiles" | "jobs" | "editor">("upload");
+  // Navigation Tabs: 5 Integrated Steps
+  const [activeTab, setActiveTab] = useState<
+    "upload" | "profiles" | "jobs" | "builder" | "editor"
+  >("upload");
 
-  // Base resume & candidate profile initialized as null unless saved in localStorage
+  // Base resume & candidate profile initialized from localStorage
   const [profile, setProfile] = useState<CandidateProfile | null>(() => {
     if (typeof window === "undefined") return null;
     try {
@@ -101,7 +131,8 @@ function ResumePage() {
       }
 
       parsed.github = parsed.github || initialConnectedProfiles.github;
-      parsed.github.featuredRepos = parsed.github.featuredRepos || initialConnectedProfiles.github.featuredRepos;
+      parsed.github.featuredRepos =
+        parsed.github.featuredRepos || initialConnectedProfiles.github.featuredRepos;
       parsed.leetcode = parsed.leetcode || initialConnectedProfiles.leetcode;
       parsed.linkedin = parsed.linkedin || initialConnectedProfiles.linkedin;
 
@@ -110,8 +141,8 @@ function ResumePage() {
       return initialConnectedProfiles;
     }
   });
-  const [jobs, setJobs] = useState<JobOpportunity[]>(sampleJobsDataset);
 
+  const [jobs, setJobs] = useState<JobOpportunity[]>(sampleJobsDataset);
   const [analyzingJob, setAnalyzingJob] = useState<JobOpportunity | null>(null);
   const [tailoredResume, setTailoredResume] = useState<TailoredResume | null>(null);
   const [isTailoring, setIsTailoring] = useState(false);
@@ -159,7 +190,10 @@ function ResumePage() {
     try {
       let updatedConnected = { ...connectedProfiles };
       if (prof.githubUrl) {
-        const ghUsername = prof.githubUrl.replace(/^https?:\/\/(www\.)?github\.com\//i, "").replace(/\/$/, "").trim();
+        const ghUsername = prof.githubUrl
+          .replace(/^https?:\/\/(www\.)?github\.com\//i, "")
+          .replace(/\/$/, "")
+          .trim();
         if (ghUsername) {
           const liveGh = await fetchGitHubProfile(ghUsername);
           updatedConnected = { ...updatedConnected, github: liveGh };
@@ -186,7 +220,7 @@ function ResumePage() {
     setConnectedProfiles(initialConnectedProfiles);
   };
 
-  // Trigger AI Tailoring Engine
+  // Trigger AI Tailoring Engine for Job Description
   const handleStartTailoring = (job: JobOpportunity) => {
     if (!profile || !profile.name) {
       toast.error("Please upload your base resume in Step 1 first before generating tailored resumes!");
@@ -212,11 +246,11 @@ function ResumePage() {
           <div className="flex items-center gap-2">
             <h1 className="text-3xl font-extrabold tracking-tight text-gradient">Resume AI Studio</h1>
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-              <ShieldCheck className="h-3.5 w-3.5" /> Anti-Fabrication Engine Active
+              <ShieldCheck className="h-3.5 w-3.5" /> Anti-Fabrication & 10 ATS Templates Active
             </span>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Merge live GitHub/LeetCode stats, match campus internship Job Descriptions, and generate tailored ATS resumes.
+            10 professional layouts, live ATS audit scoring, GitHub/LeetCode live verification, and campus JD match tailoring.
           </p>
         </div>
 
@@ -263,6 +297,17 @@ function ResumePage() {
         </button>
 
         <button
+          onClick={() => setActiveTab("builder")}
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+            activeTab === "builder"
+              ? "btn-gradient shadow-md text-white"
+              : "text-muted-foreground hover:bg-card hover:text-foreground"
+          }`}
+        >
+          <LayoutTemplate className="h-4 w-4" /> 4. AI Resume Builder (10 Templates)
+        </button>
+
+        <button
           onClick={() => setActiveTab("editor")}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeTab === "editor"
@@ -270,19 +315,45 @@ function ResumePage() {
               : "text-muted-foreground hover:bg-card hover:text-foreground"
           }`}
         >
-          <FileEdit className="h-4 w-4" /> 4. AI Tailored Resume Studio
+          <FileEdit className="h-4 w-4" /> 5. Tailored Job Studio
         </button>
       </div>
 
       {/* Tab 1: Upload */}
       {activeTab === "upload" && (
-        <ResumeUploadSection
-          baseResume={baseResume}
-          profile={profile}
-          onUpdateResume={handleUpdateResume}
-          onUpdateProfile={handleUpdateProfile}
-          onRemoveResume={handleRemoveResume}
-        />
+        <div className="space-y-4">
+          {profile && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl glass border border-primary/20 bg-primary/5">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary shrink-0">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">
+                    Candidate Profile Loaded: {profile.name}
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    {profile.projects?.length || 0} projects, {profile.education?.length || 0} degrees, and skills indexed. Open in the 10-template AI Resume Builder anytime.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveTab("builder")}
+                className="btn-gradient text-xs font-semibold px-4 py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap cursor-pointer"
+              >
+                <LayoutTemplate className="h-3.5 w-3.5" /> Open in AI Resume Builder <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
+          <ResumeUploadSection
+            baseResume={baseResume}
+            profile={profile}
+            onUpdateResume={handleUpdateResume}
+            onUpdateProfile={handleUpdateProfile}
+            onRemoveResume={handleRemoveResume}
+          />
+        </div>
       )}
 
       {/* Tab 2: Connected Profiles */}
@@ -308,7 +379,18 @@ function ResumePage() {
         />
       )}
 
-      {/* Tab 4: AI Resume Studio & Editor */}
+      {/* Tab 4: AI Resume Builder with 10 Templates */}
+      {activeTab === "builder" && (
+        <ResumeBuilderContainer
+          initialData={profile ? candidateProfileToResumeData(profile) : undefined}
+          onSyncToProfile={(syncedData) => {
+            const converted = resumeDataToCandidateProfile(syncedData);
+            setProfile(converted);
+          }}
+        />
+      )}
+
+      {/* Tab 5: AI Tailored Resume Studio (Job Match) */}
       {activeTab === "editor" && (
         <ResumeEditorSection
           baseProfile={profile}
