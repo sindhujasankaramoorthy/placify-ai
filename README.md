@@ -180,15 +180,3 @@ Interactive Swagger API documentation will be available at [http://localhost:800
 | `POST` | `/api/v1/resumes/analyze-ats` | Calculate ATS score, keywords, and feedback |
 | `POST` | `/api/v1/resumes/tailor` | Generate targeted role phrasing and metric bullets |
 | `GET` | `/health` | Healthcheck probe |
-
----
-
-## 🛡️ License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-<div align="center">
-  Crafted with ❤️ by <a href="https://github.com/sindhujasankaramoorthy">Sindhuja Sankaramoorthy</a>
-</div>
