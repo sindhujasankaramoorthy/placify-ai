@@ -5,7 +5,7 @@ import { generateNaukriEngineeringDataset, type JobInfo } from "./naukri-dataset
 
 export type { JobInfo } from "./naukri-dataset";
 
-const CACHE_FILE = path.join(process.cwd(), "jobs-cache.json");
+const CACHE_FILE = path.join(process.cwd(), "jobs-cache-v7.json");
 const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours
 
 async function fetchLiveEngineeringJobs(): Promise<JobInfo[]> {
@@ -105,7 +105,7 @@ export const getDailyJobs = createServerFn({ method: "GET" }).handler(async (): 
       if (!isExpired) {
         const cacheData = await fs.readFile(CACHE_FILE, "utf-8");
         const parsed = JSON.parse(cacheData) as JobInfo[];
-        if (parsed.length >= 100) {
+        if (Array.isArray(parsed) && parsed.length >= 1000) {
           return parsed;
         }
       }
@@ -114,7 +114,12 @@ export const getDailyJobs = createServerFn({ method: "GET" }).handler(async (): 
     }
 
     const naukriJobs = generateNaukriEngineeringDataset();
-    const liveOnline = await fetchLiveEngineeringJobs();
+    let liveOnline: JobInfo[] = [];
+    try {
+      liveOnline = await fetchLiveEngineeringJobs();
+    } catch (liveErr) {
+      console.warn("Live online jobs fetch failed, using Naukri & Indeed dataset:", liveErr);
+    }
     const allJobs = [...naukriJobs, ...liveOnline];
 
     try {

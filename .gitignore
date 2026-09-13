@@ -15,6 +15,7 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+jobs-cache*.json
 
 # Wrangler / Cloudflare
 .wrangler/
