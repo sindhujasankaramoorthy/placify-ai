@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useMemo, useEffect } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Search,
   MapPin,
@@ -21,7 +21,8 @@ import {
   ChevronRight,
   Laptop,
   Check,
-  Send
+  Send,
+  Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -68,6 +69,7 @@ const CATEGORIES = [
 ];
 
 function JobsPage() {
+  const navigate = useNavigate();
   const loadedData = Route.useLoaderData();
   const initialJobs = useMemo(() => {
     if (Array.isArray(loadedData) && loadedData.length >= 1000) {
@@ -78,6 +80,29 @@ function JobsPage() {
   const [jobs, setJobs] = useState<JobInfo[]>(initialJobs);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState("Just now");
+
+  const handlePersonalizeJob = (job: JobInfo) => {
+    try {
+      localStorage.setItem(
+        "placify_personalize_job",
+        JSON.stringify({
+          id: job.id,
+          title: job.role,
+          company: job.c,
+          location: job.loc,
+          description: job.desc || "",
+          skills: job.skills,
+          category: job.category,
+          experienceLevel: job.exp,
+          source: job.source,
+        })
+      );
+      navigate({ to: "/dashboard/personalizer" });
+      toast.success(`Loaded ${job.c} (${job.role}) into Resume Personalizer!`);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState("");
@@ -810,6 +835,15 @@ function JobsPage() {
                   </button>
 
                   <button
+                    onClick={() => handlePersonalizeJob(j)}
+                    className="inline-flex items-center justify-center gap-1 rounded-xl border border-primary/30 bg-primary/10 px-2.5 py-2 text-xs font-bold text-primary hover:bg-primary/20 active:scale-95 transition-all cursor-pointer"
+                    title={`Personalize resume for ${j.c} (${j.role})`}
+                  >
+                    <Wand2 className="h-3 w-3" />
+                    <span>Tailor</span>
+                  </button>
+
+                  <button
                     onClick={() => {
                       const isIndeed = j.source === "Indeed India";
                       const targetUrl = isIndeed && j.indeedUrl ? j.indeedUrl : j.url;
@@ -1075,6 +1109,15 @@ function JobsPage() {
                   className="rounded-xl border border-border px-3.5 py-2 text-xs font-bold hover:bg-accent transition-all cursor-pointer"
                 >
                   Close
+                </button>
+
+                <button
+                  onClick={() => handlePersonalizeJob(activeJob)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary px-3.5 py-2 text-xs font-bold transition-all cursor-pointer active:scale-95"
+                  title={`Personalize resume for ${activeJob.c} (${activeJob.role})`}
+                >
+                  <Wand2 className="h-3.5 w-3.5" />
+                  <span>Personalize Resume</span>
                 </button>
 
                 {activeJob.careerUrl && (

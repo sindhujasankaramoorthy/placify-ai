@@ -97,6 +97,8 @@ export const RESUME_TEMPLATES: TemplateMetadata[] = [
   },
 ];
 
+export const AVAILABLE_TEMPLATES = RESUME_TEMPLATES;
+
 export function getTemplateById(id: string): TemplateMetadata {
   if (!id) return RESUME_TEMPLATES[0];
   const exact = RESUME_TEMPLATES.find((t) => t.id === id);

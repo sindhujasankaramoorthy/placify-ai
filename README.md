@@ -41,19 +41,25 @@
 - **Automated Recommendations**: Color-coded checklists flagging missing contact items, weak action verbs, and recommended industry keywords.
 - **Missing Skills Detection**: Identifies gaps between your resume and standard industry expectations.
 
-### 4. 🤖 AI Role Tailoring Engine
-- **Target Role Optimization**: Optimize phrasing and skill groupings for roles like *Cloud Engineer*, *Full Stack Developer*, *DevOps Engineer*, *Backend Architect*, and *Data Scientist*.
-- **Anti-Fabrication Guardrails**: Never hallucinates false companies, fictitious degrees, or unearned credentials. Powered by Google Gemini with offline rule-engine fallbacks.
+### 4. 🤖 Zero-Hallucination Resume Personalizer
+- **Target Job Alignment**: Upload any resume (PDF, DOCX, TXT) and personalize it strictly for any chosen job (1,000+ live Naukri & Indeed roles, campus listings, or custom JDs).
+- **Anti-Hallucination Guarantee**: Strictly prevents falsified qualifications (0 fake employers, 0 fake degrees, 0 fabricated metrics). Verifies 100% fidelity to authentic candidate credentials.
+- **Transparent Skill Gap Tracker**: Identifies job requirements missing from candidate's profile and catalogs them as learning roadmaps rather than hallucinating false skills.
+- **Interactive Diff & High-Res Export**: Compare original vs tailored resume side-by-side, download vector ATS PDFs or Word (.docx), and open directly in the 10-template studio.
 
-### 5. 🔗 Live GitHub & LeetCode Profile Verification
+### 5. 🤖 AI Role Tailoring Engine
+- **Target Role Optimization**: Optimize phrasing and skill groupings for roles like *Cloud Engineer*, *Full Stack Developer*, *DevOps Engineer*, *Backend Architect*, and *Data Scientist*.
+- **Anti-Fabrication Guardrails**: Powered by Google Gemini with offline rule-engine fallbacks.
+
+### 6. 🔗 Live GitHub & LeetCode Profile Verification
 - **GitHub Integration**: Fetches public repositories, star counts, primary languages, and verified commits.
 - **LeetCode Integration**: Pulls live problem-solving stats (Easy, Medium, Hard breakdown) to showcase algorithmic proficiency.
 
-### 6. 💼 Campus Jobs Directory & Anti-Fabrication Matcher
+### 7. 💼 Campus Jobs Directory & Anti-Fabrication Matcher
 - **Job Description Parsing**: Match campus placement listings and internship requirements against candidate skills.
 - **Anti-Fabrication Match Modal**: Compares candidate achievements directly against JD bullet points with transparent match percentages.
 
-### 7. 💾 Multi-Version Draft Manager
+### 8. 💾 Multi-Version Draft Manager
 - **Version Control**: Create new blank drafts, load previous resume versions, and delete obsolete iterations.
 - **Offline Resiliency**: Dual-layer synchronization supporting offline `localStorage` and REST database persistence.
 
@@ -179,4 +185,7 @@ Interactive Swagger API documentation will be available at [http://localhost:800
 | `POST` | `/api/v1/resumes/parse-file` | Extract structured data from uploaded PDF/DOCX |
 | `POST` | `/api/v1/resumes/analyze-ats` | Calculate ATS score, keywords, and feedback |
 | `POST` | `/api/v1/resumes/tailor` | Generate targeted role phrasing and metric bullets |
+| `POST` | `/api/v1/resumes/personalize` | Zero-hallucination resume personalization for chosen job |
+| `POST` | `/api/v1/resumes/upload-and-personalize` | Upload resume file and personalize directly for target job |
 | `GET` | `/health` | Healthcheck probe |
+

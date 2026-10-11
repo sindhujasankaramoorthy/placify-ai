@@ -31,3 +31,13 @@ jobs-cache*.json
 *.njsproj
 *.sln
 *.sw?
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+backend/venv/
+venv/
+*.db
+*.sqlite3
+sql_app.db

@@ -20,6 +20,7 @@ import { Route as DashboardAnalyzerRouteImport } from './routes/dashboard.analyz
 import { Route as DashboardApplicationsRouteImport } from './routes/dashboard.applications'
 import { Route as DashboardJobsRouteImport } from './routes/dashboard.jobs'
 import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
+import { Route as DashboardPersonalizerRouteImport } from './routes/dashboard.personalizer'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
 import { Route as DashboardResumeRouteImport } from './routes/dashboard.resume'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
@@ -80,6 +81,11 @@ const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardPersonalizerRoute = DashboardPersonalizerRouteImport.update({
+  id: '/personalizer',
+  path: '/personalizer',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/applications': typeof DashboardApplicationsRoute
   '/dashboard/jobs': typeof DashboardJobsRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
+  '/dashboard/personalizer': typeof DashboardPersonalizerRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/resume': typeof DashboardResumeRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/dashboard/applications': typeof DashboardApplicationsRoute
   '/dashboard/jobs': typeof DashboardJobsRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
+  '/dashboard/personalizer': typeof DashboardPersonalizerRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/resume': typeof DashboardResumeRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/dashboard/applications': typeof DashboardApplicationsRoute
   '/dashboard/jobs': typeof DashboardJobsRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
+  '/dashboard/personalizer': typeof DashboardPersonalizerRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/resume': typeof DashboardResumeRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/dashboard/applications'
     | '/dashboard/jobs'
     | '/dashboard/notifications'
+    | '/dashboard/personalizer'
     | '/dashboard/profile'
     | '/dashboard/resume'
     | '/dashboard/settings'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/dashboard/applications'
     | '/dashboard/jobs'
     | '/dashboard/notifications'
+    | '/dashboard/personalizer'
     | '/dashboard/profile'
     | '/dashboard/resume'
     | '/dashboard/settings'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/dashboard/applications'
     | '/dashboard/jobs'
     | '/dashboard/notifications'
+    | '/dashboard/personalizer'
     | '/dashboard/profile'
     | '/dashboard/resume'
     | '/dashboard/settings'
@@ -293,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardNotificationsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/personalizer': {
+      id: '/dashboard/personalizer'
+      path: '/personalizer'
+      fullPath: '/dashboard/personalizer'
+      preLoaderRoute: typeof DashboardPersonalizerRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/profile': {
       id: '/dashboard/profile'
       path: '/profile'
@@ -329,6 +348,7 @@ interface DashboardRouteChildren {
   DashboardApplicationsRoute: typeof DashboardApplicationsRoute
   DashboardJobsRoute: typeof DashboardJobsRoute
   DashboardNotificationsRoute: typeof DashboardNotificationsRoute
+  DashboardPersonalizerRoute: typeof DashboardPersonalizerRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardResumeRoute: typeof DashboardResumeRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
@@ -341,6 +361,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardApplicationsRoute: DashboardApplicationsRoute,
   DashboardJobsRoute: DashboardJobsRoute,
   DashboardNotificationsRoute: DashboardNotificationsRoute,
+  DashboardPersonalizerRoute: DashboardPersonalizerRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardResumeRoute: DashboardResumeRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,

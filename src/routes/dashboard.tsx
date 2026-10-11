@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useState } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, Search, ClipboardList, TrendingUp,
-  Bell, Settings, User, Sparkles, Menu, X, LogOut
+  Bell, Settings, User, Sparkles, Menu, X, LogOut, Wand2
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
@@ -20,6 +20,7 @@ export const Route = createFileRoute("/dashboard")({
 const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/dashboard/jobs", label: "Recommended Jobs", icon: Briefcase },
+  { to: "/dashboard/personalizer", label: "Resume Personalizer", icon: Wand2 },
   { to: "/dashboard/resume", label: "Resume", icon: FileText },
   { to: "/dashboard/analyzer", label: "Resume Analyzer", icon: Search },
   { to: "/dashboard/applications", label: "Applications", icon: ClipboardList },

@@ -130,3 +130,32 @@ class AITailorResponseSchema(BaseModel):
     tailored_content: Dict[str, Any]
     ats_score: int
     summary_of_changes: List[str]
+
+
+class AIPersonalizeRequestSchema(BaseModel):
+    target_role: str
+    company_name: str
+    job_description: str = ""
+    required_skills: List[str] = Field(default_factory=list)
+    content: Dict[str, Any]
+
+
+class AntiHallucinationAuditSchema(BaseModel):
+    is_verified: bool
+    preservation_score: int
+    invented_companies: int
+    invented_degrees: int
+    invented_skills: int
+    verifications: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class AIPersonalizeResponseSchema(BaseModel):
+    target_role: str
+    company_name: str
+    personalized_content: Dict[str, Any]
+    original_ats_score: int
+    personalized_ats_score: int
+    matched_skills: List[str]
+    skill_gaps: List[str]
+    anti_hallucination_audit: AntiHallucinationAuditSchema
+    summary_of_changes: List[str]

@@ -11,6 +11,8 @@ from backend.app.schemas.resume import (
     ResumeContentSchema,
     AITailorRequestSchema,
     AITailorResponseSchema,
+    AIPersonalizeRequestSchema,
+    AIPersonalizeResponseSchema,
 )
 from backend.app.services.parser import (
     extract_text_from_pdf,
@@ -19,6 +21,7 @@ from backend.app.services.parser import (
 )
 from backend.app.services.ats_analyzer import analyze_resume_ats
 from backend.app.services.ai_tailor import tailor_resume_with_ai
+from backend.app.services.ai_personalizer import personalize_resume_zero_hallucination
 
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 
@@ -148,3 +151,50 @@ def analyze_ats(payload: Dict[str, Any]):
 def tailor_resume(request: AITailorRequestSchema):
     """Generate job-tailored resume content for a target job role."""
     return tailor_resume_with_ai(request.content, request.target_role)
+
+
+@router.post("/personalize", response_model=AIPersonalizeResponseSchema)
+def personalize_resume_endpoint(request: AIPersonalizeRequestSchema):
+    """
+    Generate an ATS-optimized, job-personalized resume tailored strictly for a chosen job.
+    Strictly prevents hallucinations: zero fake degrees, zero fake companies, zero fabricated metrics.
+    """
+    return personalize_resume_zero_hallucination(
+        content=request.content,
+        target_role=request.target_role,
+        company_name=request.company_name,
+        job_description=request.job_description,
+        required_skills=request.required_skills,
+    )
+
+
+@router.post("/upload-and-personalize", response_model=AIPersonalizeResponseSchema)
+async def upload_and_personalize_endpoint(
+    file: UploadFile = File(...),
+    target_role: str = "Software Engineer",
+    company_name: str = "Target Company",
+    job_description: str = "",
+    required_skills: str = "",  # comma-separated
+):
+    """Upload resume file and personalize directly for target job without hallucination."""
+    filename = (file.filename or "").lower()
+    contents = await file.read()
+
+    if filename.endswith(".pdf"):
+        raw_text = extract_text_from_pdf(contents)
+    elif filename.endswith((".docx", ".doc")):
+        raw_text = extract_text_from_docx(contents)
+    else:
+        raw_text = contents.decode("utf-8", errors="ignore")
+
+    parsed_data = parse_resume_text_to_data(raw_text)
+    skills_list = [s.strip() for s in required_skills.split(",") if s.strip()]
+
+    return personalize_resume_zero_hallucination(
+        content=parsed_data,
+        target_role=target_role,
+        company_name=company_name,
+        job_description=job_description,
+        required_skills=skills_list,
+    )
+

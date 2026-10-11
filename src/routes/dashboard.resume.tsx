@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Upload,
   Link2,
@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   LayoutTemplate,
   ArrowRight,
+  Wand2,
 } from "lucide-react";
 import {
   BaseResume,
@@ -254,11 +255,19 @@ function ResumePage() {
           </p>
         </div>
 
-        {tailoredResume && (
-          <div className="flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary">
-            <Sparkles className="h-4 w-4" /> Active Job Context: {tailoredResume.companyName} ({tailoredResume.jobTitle})
-          </div>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {tailoredResume && (
+            <div className="flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary">
+              <Sparkles className="h-4 w-4" /> Active Job Context: {tailoredResume.companyName} ({tailoredResume.jobTitle})
+            </div>
+          )}
+          <Link
+            to="/dashboard/personalizer"
+            className="inline-flex items-center gap-1.5 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-bold text-primary hover:bg-primary/20 transition-all cursor-pointer shadow-sm active:scale-95"
+          >
+            <Wand2 className="h-4 w-4" /> Open Resume Personalizer →
+          </Link>
+        </div>
       </div>
 
       {/* Workflow Navigation Bar */}

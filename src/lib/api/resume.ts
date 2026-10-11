@@ -326,6 +326,78 @@ export async function generateAITailoredResume(
   }
 }
 
+export interface PersonalizeResumeRequest {
+  target_role: string;
+  company_name: string;
+  job_description: string;
+  required_skills: string[];
+  content: ResumeData;
+}
+
+export interface PersonalizeResumeApiResponse {
+  target_role: string;
+  company_name: string;
+  personalized_content: ResumeData;
+  original_ats_score: number;
+  personalized_ats_score: number;
+  matched_skills: string[];
+  skill_gaps: string[];
+  anti_hallucination_audit: {
+    is_verified: boolean;
+    preservation_score: number;
+    invented_companies: number;
+    invented_degrees: number;
+    invented_skills: number;
+    verifications: { section: string; status: "verified" | "flagged"; message: string }[];
+  };
+  summary_of_changes: string[];
+}
+
+export async function personalizeResumeApi(payload: PersonalizeResumeRequest): Promise<PersonalizeResumeApiResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/resumes/personalize`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (err) {
+    console.warn("Backend personalize endpoint unreachable, will use client personalizer engine:", err);
+  }
+
+  // Client-side fallback using personalizerEngine
+  const { personalizeResumeForJob } = await import("@/lib/resume/personalizerEngine");
+  const jobTarget = {
+    id: "target-job",
+    title: payload.target_role,
+    company: payload.company_name,
+    description: payload.job_description,
+    skills: payload.required_skills,
+  };
+  const result = personalizeResumeForJob(payload.content, jobTarget);
+
+  return {
+    target_role: payload.target_role,
+    company_name: payload.company_name,
+    personalized_content: result.personalizedResume,
+    original_ats_score: result.matchScoreBefore,
+    personalized_ats_score: result.matchScoreAfter,
+    matched_skills: result.matchedSkills,
+    skill_gaps: result.skillGaps,
+    anti_hallucination_audit: {
+      is_verified: result.audit.isVerified,
+      preservation_score: result.audit.preservationScore,
+      invented_companies: result.audit.inventedCompaniesCount,
+      invented_degrees: result.audit.inventedDegreesCount,
+      invented_skills: result.audit.inventedSkillsCount,
+      verifications: result.audit.verifications,
+    },
+    summary_of_changes: result.diffs.map((d) => `${d.section}: ${d.reason}`),
+  };
+}
+
 function clientSideAITailor(content: ResumeData, targetRole: string): AITailorResult {
   const tailored: ResumeData = JSON.parse(JSON.stringify(content));
   const summary = tailored.summary?.trim() || "";
