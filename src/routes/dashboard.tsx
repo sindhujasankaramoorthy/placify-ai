@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, Search, ClipboardList, TrendingUp,
@@ -20,6 +20,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function DashboardLayout() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<PlacifyUser>(getActiveUser());
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -30,31 +31,68 @@ function DashboardLayout() {
     return unsub;
   }, []);
 
+  // Guard: If admin tries to access student-only pages, automatically redirect to Placement Command Center
+  useEffect(() => {
+    if (user.role === "admin") {
+      const isStudentOnly =
+        pathname === "/dashboard" ||
+        pathname === "/dashboard/" ||
+        pathname.startsWith("/dashboard/personalizer") ||
+        pathname.startsWith("/dashboard/resume") ||
+        pathname.startsWith("/dashboard/analyzer") ||
+        pathname.startsWith("/dashboard/applications") ||
+        pathname.startsWith("/dashboard/skills") ||
+        pathname.startsWith("/dashboard/notifications");
+
+      if (isStudentOnly) {
+        navigate({ to: "/dashboard/admin/placements" });
+      }
+    }
+  }, [user.role, pathname, navigate]);
+
   const handleToggleRole = () => {
     const nextRole = user.role === "admin" ? "student" : "admin";
     const newUser = switchRole(nextRole);
     setUser(newUser);
     toast.success(`Switched mode to: ${newUser.role === "admin" ? "Placement Cell Administrator" : "Student View"}`);
+    if (newUser.role === "admin") {
+      navigate({ to: "/dashboard/admin/placements" });
+    }
   };
 
-  const navItems = [
-    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
-    {
-      to: "/dashboard/admin/placements",
-      label: user.role === "admin" ? "Placement Cell Admin" : "Placement Insights",
-      icon: user.role === "admin" ? ShieldCheck : TrendingUp,
-      badge: user.role === "admin" ? "Admin" : "Student",
-    },
-    { to: "/dashboard/jobs", label: "Recommended Jobs", icon: Briefcase },
-    { to: "/dashboard/personalizer", label: "Resume Personalizer", icon: Wand2 },
-    { to: "/dashboard/resume", label: "Resume", icon: FileText },
-    { to: "/dashboard/analyzer", label: "Resume Analyzer", icon: Search },
-    { to: "/dashboard/applications", label: "Applications", icon: ClipboardList },
-    { to: "/dashboard/skills", label: "Skill Tracker", icon: TrendingUp },
-    { to: "/dashboard/notifications", label: "Notifications", icon: Bell },
-    { to: "/dashboard/profile", label: "Profile", icon: User },
-    { to: "/dashboard/settings", label: "Settings", icon: Settings },
-  ];
+  // Dedicated navigation for Admin vs Student
+  // For Admin: Dashboard, Resume Personalizer, Resume, Resume Analyzer, Applications, Skill Tracking, Notifications are removed
+  const navItems =
+    user.role === "admin"
+      ? [
+          {
+            to: "/dashboard/admin/placements",
+            label: "Placement Analytics & Records",
+            icon: ShieldCheck,
+            badge: "Admin",
+          },
+          { to: "/dashboard/jobs", label: "Recruiter Directory", icon: Briefcase },
+          { to: "/dashboard/profile", label: "Officer Profile", icon: User },
+          { to: "/dashboard/settings", label: "Placement Settings", icon: Settings },
+        ]
+      : [
+          { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
+          {
+            to: "/dashboard/admin/placements",
+            label: "Placement Insights",
+            icon: TrendingUp,
+            badge: "Student",
+          },
+          { to: "/dashboard/jobs", label: "Recommended Jobs", icon: Briefcase },
+          { to: "/dashboard/personalizer", label: "Resume Personalizer", icon: Wand2 },
+          { to: "/dashboard/resume", label: "Resume", icon: FileText },
+          { to: "/dashboard/analyzer", label: "Resume Analyzer", icon: Search },
+          { to: "/dashboard/applications", label: "Applications", icon: ClipboardList },
+          { to: "/dashboard/skills", label: "Skill Tracker", icon: TrendingUp },
+          { to: "/dashboard/notifications", label: "Notifications", icon: Bell },
+          { to: "/dashboard/profile", label: "Profile", icon: User },
+          { to: "/dashboard/settings", label: "Settings", icon: Settings },
+        ];
 
   return (
     <div className="min-h-screen">
@@ -67,7 +105,7 @@ function DashboardLayout() {
         >
           <div className="flex h-full flex-col rounded-3xl p-4 glass-strong">
             <div className="flex items-center justify-between">
-              <Link to="/" className="flex items-center gap-2">
+              <Link to={user.role === "admin" ? "/dashboard/admin/placements" : "/dashboard"} className="flex items-center gap-2">
                 <span className="grid h-9 w-9 place-items-center rounded-xl gradient-brand">
                   <Sparkles className="h-5 w-5 text-white" strokeWidth={2.5} />
                 </span>
@@ -166,9 +204,11 @@ function DashboardLayout() {
                 </span>
                 <span className="text-[10px] text-primary underline ml-1">Switch</span>
               </button>
-              <Link to="/dashboard/notifications" className="grid h-10 w-10 place-items-center rounded-xl border border-border hover:bg-accent" aria-label="Notifications">
-                <Bell className="h-4 w-4" />
-              </Link>
+              {user.role === "student" && (
+                <Link to="/dashboard/notifications" className="grid h-10 w-10 place-items-center rounded-xl border border-border hover:bg-accent" aria-label="Notifications">
+                  <Bell className="h-4 w-4" />
+                </Link>
+              )}
               <Link to="/dashboard/profile" className="grid h-10 w-10 place-items-center rounded-full gradient-brand text-sm font-bold text-white">
                 {user.avatarLetter}
               </Link>

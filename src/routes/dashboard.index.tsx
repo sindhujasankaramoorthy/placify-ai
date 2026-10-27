@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   Briefcase, FileCheck2, CalendarCheck, Star, TrendingUp, ArrowUpRight,
   Building2, Clock, Bell
@@ -6,6 +7,7 @@ import {
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid
 } from "recharts";
+import { getActiveUser, onAuthChange } from "@/lib/auth";
 
 export const Route = createFileRoute("/dashboard/")({
   head: () => ({
@@ -52,6 +54,31 @@ const deadlines = [
 const companies = ["Google", "Microsoft", "Amazon", "Meta", "Stripe", "Razorpay"];
 
 function DashboardHome() {
+  const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(() => getActiveUser().role === "admin");
+
+  useEffect(() => {
+    const user = getActiveUser();
+    if (user.role === "admin") {
+      navigate({ to: "/dashboard/admin/placements" });
+    }
+    const unsub = onAuthChange((u) => {
+      setIsAdmin(u.role === "admin");
+      if (u.role === "admin") {
+        navigate({ to: "/dashboard/admin/placements" });
+      }
+    });
+    return unsub;
+  }, [navigate]);
+
+  if (isAdmin) {
+    return (
+      <div className="py-16 text-center text-xs text-muted-foreground">
+        Redirecting to Placement Cell Command Center...
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Welcome */}
