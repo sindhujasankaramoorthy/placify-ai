@@ -41,3 +41,8 @@ venv/
 *.db
 *.sqlite3
 sql_app.db
+
+# Scratch and tool directories
+.postqode/
+scratch/
+

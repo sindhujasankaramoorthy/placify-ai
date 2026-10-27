@@ -1,3 +1,8 @@
+import os
+
+# Disable C extensions so Windows Application Control policies don't block .pyd DLLs
+os.environ["DISABLE_SQLALCHEMY_CEXT"] = "1"
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from backend.app.core.config import settings

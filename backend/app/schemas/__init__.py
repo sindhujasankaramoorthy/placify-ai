@@ -8,6 +8,16 @@ from backend.app.schemas.resume import (
     AITailorResponseSchema,
 )
 
+from backend.app.schemas.ats import (
+    ATSJobPresetSchema,
+    ATSPresetsResponseSchema,
+    ATSScanRequestSchema,
+    ATSScanResultSchema,
+    ATSScanResponseSchema,
+    ATSHistoryItemSchema,
+    ATSHistoryResponseSchema,
+)
+
 __all__ = [
     "UserBase",
     "UserCreate",
@@ -19,4 +29,11 @@ __all__ = [
     "ResumeContentSchema",
     "AITailorRequestSchema",
     "AITailorResponseSchema",
+    "ATSJobPresetSchema",
+    "ATSPresetsResponseSchema",
+    "ATSScanRequestSchema",
+    "ATSScanResultSchema",
+    "ATSScanResponseSchema",
+    "ATSHistoryItemSchema",
+    "ATSHistoryResponseSchema",
 ]
