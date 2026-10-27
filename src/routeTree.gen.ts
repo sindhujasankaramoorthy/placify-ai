@@ -15,6 +15,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardAnalyzerRouteImport } from './routes/dashboard.analyzer'
 import { Route as DashboardApplicationsRouteImport } from './routes/dashboard.applications'
@@ -55,6 +56,11 @@ const LoginRoute = LoginRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/features': typeof FeaturesRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/admin/login': typeof AdminLoginRoute
   '/dashboard/analyzer': typeof DashboardAnalyzerRoute
   '/dashboard/applications': typeof DashboardApplicationsRoute
   '/dashboard/jobs': typeof DashboardJobsRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/features': typeof FeaturesRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/admin/login': typeof AdminLoginRoute
   '/dashboard/analyzer': typeof DashboardAnalyzerRoute
   '/dashboard/applications': typeof DashboardApplicationsRoute
   '/dashboard/jobs': typeof DashboardJobsRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/features': typeof FeaturesRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/admin/login': typeof AdminLoginRoute
   '/dashboard/analyzer': typeof DashboardAnalyzerRoute
   '/dashboard/applications': typeof DashboardApplicationsRoute
   '/dashboard/jobs': typeof DashboardJobsRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/login'
     | '/signup'
+    | '/admin/login'
     | '/dashboard/analyzer'
     | '/dashboard/applications'
     | '/dashboard/jobs'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/login'
     | '/signup'
+    | '/admin/login'
     | '/dashboard/analyzer'
     | '/dashboard/applications'
     | '/dashboard/jobs'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/login'
     | '/signup'
+    | '/admin/login'
     | '/dashboard/analyzer'
     | '/dashboard/applications'
     | '/dashboard/jobs'
@@ -237,6 +249,7 @@ export interface RootRouteChildren {
   FeaturesRoute: typeof FeaturesRoute
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  AdminLoginRoute: typeof AdminLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -281,6 +294,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/': {
@@ -402,6 +422,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeaturesRoute: FeaturesRoute,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  AdminLoginRoute: AdminLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
