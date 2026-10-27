@@ -38,19 +38,10 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Link
-            to="/login"
-            className="rounded-xl px-3 py-2 text-xs font-semibold text-emerald-600 hover:bg-emerald-500/10 transition-colors flex items-center gap-1.5"
-          >
-            Student Login
+          <Link to="/login" className="rounded-xl px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-accent">
+            Login
           </Link>
-          <Link
-            to="/admin/login"
-            className="rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-1.5 text-xs font-semibold text-blue-400 hover:bg-slate-800 transition-colors flex items-center gap-1.5 shadow-xs"
-          >
-            Placement Admin
-          </Link>
-          <Link to="/signup" className="rounded-xl px-3.5 py-1.5 text-xs font-semibold btn-gradient">
+          <Link to="/signup" className="rounded-xl px-4 py-2 text-sm font-semibold btn-gradient">
             Sign Up
           </Link>
         </div>
@@ -78,20 +69,8 @@ export function Navbar() {
               </Link>
             ))}
             <div className="mt-2 grid grid-cols-2 gap-2 pt-2 border-t border-border/60">
-              <Link
-                to="/login"
-                onClick={() => setOpen(false)}
-                className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-center text-xs font-bold text-emerald-600"
-              >
-                Student Login
-              </Link>
-              <Link
-                to="/admin/login"
-                onClick={() => setOpen(false)}
-                className="rounded-xl border border-blue-500/30 bg-slate-900 px-3 py-2 text-center text-xs font-bold text-blue-400"
-              >
-                Admin Login
-              </Link>
+              <Link to="/login" onClick={() => setOpen(false)} className="rounded-xl border border-border px-4 py-2 text-center text-sm font-semibold">Login</Link>
+              <Link to="/signup" onClick={() => setOpen(false)} className="rounded-xl px-4 py-2 text-center text-sm font-semibold btn-gradient">Sign Up</Link>
             </div>
           </div>
         </div>

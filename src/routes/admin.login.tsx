@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Navbar } from "@/components/site/Navbar";
 import { ShieldCheck, Lock, ArrowRight, CheckCircle2, KeyRound, Building, AlertCircle } from "lucide-react";
@@ -141,19 +141,6 @@ function AdminLoginPage() {
                 {isLoading ? "Authenticating Officer..." : "Sign In to Placement Administration"}
               </button>
             </form>
-
-            {/* Switch to Student Login */}
-            <div className="mt-6 pt-4 border-t border-slate-800 text-center">
-              <p className="text-xs text-slate-400">
-                Are you a student or candidate looking for placement insights?
-              </p>
-              <Link
-                to="/login"
-                className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
-              >
-                Go to Student Login Portal →
-              </Link>
-            </div>
           </div>
         </section>
       </div>
