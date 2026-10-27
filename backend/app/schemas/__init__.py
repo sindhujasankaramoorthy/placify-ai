@@ -36,4 +36,26 @@ __all__ = [
     "ATSScanResponseSchema",
     "ATSHistoryItemSchema",
     "ATSHistoryResponseSchema",
+    "PlacementSummaryResponse",
+    "CompanyPlacementStat",
+    "CompanyListResponse",
+    "CompanyStudentsResponse",
+    "StudentPlacementRecord",
+    "StudentListResponse",
+    "StudentDetailProfile",
+    "PlacementAnalyticsResponse",
+    "SeedResponse",
 ]
+
+from backend.app.schemas.placement import (
+    PlacementSummaryResponse,
+    CompanyPlacementStat,
+    CompanyListResponse,
+    CompanyStudentsResponse,
+    StudentPlacementRecord,
+    StudentListResponse,
+    StudentDetailProfile,
+    PlacementAnalyticsResponse,
+    SeedResponse,
+)
+

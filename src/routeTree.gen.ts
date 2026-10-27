@@ -25,6 +25,7 @@ import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile
 import { Route as DashboardResumeRouteImport } from './routes/dashboard.resume'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardSkillsRouteImport } from './routes/dashboard.skills'
+import { Route as DashboardAdminPlacementsRouteImport } from './routes/dashboard.admin.placements'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -106,6 +107,12 @@ const DashboardSkillsRoute = DashboardSkillsRouteImport.update({
   path: '/skills',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAdminPlacementsRoute =
+  DashboardAdminPlacementsRouteImport.update({
+    id: '/admin/placements',
+    path: '/admin/placements',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/skills': typeof DashboardSkillsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/admin/placements': typeof DashboardAdminPlacementsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -141,6 +149,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/skills': typeof DashboardSkillsRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/admin/placements': typeof DashboardAdminPlacementsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,6 +169,7 @@ export interface FileRoutesById {
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/skills': typeof DashboardSkillsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/admin/placements': typeof DashboardAdminPlacementsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/skills'
     | '/dashboard/'
+    | '/dashboard/admin/placements'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/skills'
     | '/dashboard'
+    | '/dashboard/admin/placements'
   id:
     | '__root__'
     | '/'
@@ -215,6 +227,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/skills'
     | '/dashboard/'
+    | '/dashboard/admin/placements'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -340,6 +353,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSkillsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/admin/placements': {
+      id: '/dashboard/admin/placements'
+      path: '/admin/placements'
+      fullPath: '/dashboard/admin/placements'
+      preLoaderRoute: typeof DashboardAdminPlacementsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
@@ -354,6 +374,7 @@ interface DashboardRouteChildren {
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardSkillsRoute: typeof DashboardSkillsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardAdminPlacementsRoute: typeof DashboardAdminPlacementsRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
@@ -367,6 +388,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardSkillsRoute: DashboardSkillsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardAdminPlacementsRoute: DashboardAdminPlacementsRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
