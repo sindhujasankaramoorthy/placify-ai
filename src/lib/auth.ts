@@ -53,8 +53,8 @@ export function getActiveUser(): PlacifyUser {
   } catch (e) {
     console.error("Error reading active user:", e);
   }
-  // Default to Admin for testing unless student is selected
-  return PRESET_ADMIN_USER;
+  // Default to Student - strictly requires Admin Login to gain Admin privileges
+  return PRESET_STUDENT_USER;
 }
 
 export function setActiveUser(user: PlacifyUser): void {
@@ -64,10 +64,11 @@ export function setActiveUser(user: PlacifyUser): void {
   window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: user }));
 }
 
-export function switchRole(role: UserRole): PlacifyUser {
-  const newUser = role === "admin" ? PRESET_ADMIN_USER : PRESET_STUDENT_USER;
-  setActiveUser(newUser);
-  return newUser;
+export function logoutUser(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem("placify_auth_token");
+  window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: PRESET_STUDENT_USER }));
 }
 
 export function onAuthChange(callback: (user: PlacifyUser) => void): () => void {

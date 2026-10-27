@@ -247,18 +247,17 @@ function LoginPage() {
                 </button>
               </form>
 
-              {/* Switch to Admin */}
+              {/* Admin Portal Link */}
               <div className="mt-6 pt-4 border-t border-border text-center">
                 <p className="text-xs text-muted-foreground">
                   Are you a Placement Cell Coordinator or Faculty Admin?
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setActivePortal("admin")}
+                <Link
+                  to="/admin/login"
                   className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:underline cursor-pointer"
                 >
-                  Switch to Placement Cell Admin Portal →
-                </button>
+                  Go to Placement Cell Admin Portal →
+                </Link>
               </div>
             </div>
           )}
@@ -369,7 +368,7 @@ function LoginPage() {
                 </button>
               </form>
 
-              {/* Switch to Student */}
+              {/* Student Portal Link */}
               <div className="mt-6 pt-4 border-t border-slate-800 text-center">
                 <p className="text-xs text-slate-400">
                   Are you a student looking for placement insights?
@@ -379,7 +378,7 @@ function LoginPage() {
                   onClick={() => setActivePortal("student")}
                   className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:underline cursor-pointer"
                 >
-                  Switch to Student Login Portal →
+                  Go to Student Login Portal →
                 </button>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import {
   Users,
@@ -37,7 +37,6 @@ import {
 } from "lucide-react";
 import {
   getActiveUser,
-  switchRole,
   onAuthChange,
   PlacifyUser
 } from "@/lib/auth";
@@ -319,19 +318,15 @@ export function AdminPlacementsDashboard() {
               </select>
             </div>
 
-            {/* Quick Switch Role Button */}
-            <button
-              onClick={() => {
-                const nextRole = isStudent ? "admin" : "student";
-                const u = switchRole(nextRole);
-                setCurrentUser(u);
-                toast.success(`Switched role to: ${u.role === "admin" ? "Placement Cell Administrator" : "Student View"}`);
-              }}
-              className="inline-flex items-center gap-1.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
-            >
-              {isStudent ? <ShieldCheck className="h-3.5 w-3.5 text-blue-400" /> : <GraduationCap className="h-3.5 w-3.5 text-emerald-400" />}
-              <span>Switch to {isStudent ? "Admin" : "Student"}</span>
-            </button>
+            {/* Active Role Indicator */}
+            <div className={`inline-flex items-center gap-1.5 rounded-2xl px-3.5 py-2 text-xs font-semibold border ${
+              isStudent
+                ? "bg-emerald-950/40 border-emerald-500/30 text-emerald-300"
+                : "bg-blue-950/40 border-blue-500/30 text-blue-300"
+            }`}>
+              {isStudent ? <GraduationCap className="h-3.5 w-3.5 text-emerald-400" /> : <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />}
+              <span>{isStudent ? "Student View" : "Placement Admin"}</span>
+            </div>
 
             <button
               onClick={handleRefresh}
@@ -410,17 +405,13 @@ export function AdminPlacementsDashboard() {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => {
-              const u = switchRole("admin");
-              setCurrentUser(u);
-              toast.success("Switched to Placement Officer Admin Mode.");
-            }}
+          <Link
+            to="/admin/login"
             className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 text-xs font-bold shrink-0 cursor-pointer shadow-sm transition-colors"
           >
             <ShieldCheck className="h-3.5 w-3.5" />
-            Switch to Admin View
-          </button>
+            Officer Login
+          </Link>
         </div>
       )}
 
@@ -1178,17 +1169,13 @@ export function AdminPlacementsDashboard() {
                     Under university placement policy, personal contact details, offer letters, and individual compensation packages of other students are confidential. Macro placement trends and company recruitment counts remain visible in the Overview and Company Recruits tabs.
                   </p>
                 </div>
-                <button
-                  onClick={() => {
-                    const u = switchRole("admin");
-                    setCurrentUser(u);
-                    toast.success("Switched to Placement Officer Admin Mode.");
-                  }}
-                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 text-xs font-bold shrink-0 transition-colors cursor-pointer shadow-sm"
+                <Link
+                  to="/admin/login"
+                  className="inline-flex items-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 text-xs font-bold shrink-0 transition-colors border border-slate-700 shadow-sm"
                 >
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  View Full 66-Student Register (Admin Mode)
-                </button>
+                  <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
+                  Officer Login Required for Full Register
+                </Link>
               </div>
             </div>
           ) : (
@@ -1512,17 +1499,13 @@ export function AdminPlacementsDashboard() {
                 </div>
               </div>
               <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  onClick={() => {
-                    const u = switchRole("admin");
-                    setCurrentUser(u);
-                    toast.success("Switched to Placement Officer Admin Mode.");
-                  }}
+                <Link
+                  to="/admin/login"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 text-xs font-bold transition-all shadow-md cursor-pointer"
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  Log in as Placement Officer (Dr. K. Ramesh)
-                </button>
+                  Sign In via Placement Officer Portal
+                </Link>
                 <button
                   onClick={() => setActiveTab("overview")}
                   className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold hover:bg-accent cursor-pointer"
@@ -1631,17 +1614,13 @@ export function AdminPlacementsDashboard() {
                 Institutional counting rules, dream offer thresholds, and test data seeding are restricted to Placement Cell Administrators.
               </p>
               <div className="mt-6 flex justify-center">
-                <button
-                  onClick={() => {
-                    const u = switchRole("admin");
-                    setCurrentUser(u);
-                    toast.success("Switched to Placement Officer Admin Mode.");
-                  }}
+                <Link
+                  to="/admin/login"
                   className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 text-xs font-bold transition-all shadow-md cursor-pointer"
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  Log in as Placement Officer (Dr. K. Ramesh)
-                </button>
+                  Sign In via Placement Officer Portal
+                </Link>
               </div>
             </div>
           ) : (

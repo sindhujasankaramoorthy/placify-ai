@@ -2,9 +2,9 @@ import { createFileRoute, Link, Outlet, useRouterState, useNavigate } from "@tan
 import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, Search, ClipboardList, TrendingUp,
-  Bell, Settings, User, Sparkles, Menu, X, LogOut, Wand2, ShieldCheck
+  Bell, Settings, User, Sparkles, Menu, X, LogOut, Wand2, ShieldCheck, GraduationCap
 } from "lucide-react";
-import { getActiveUser, switchRole, onAuthChange, PlacifyUser } from "@/lib/auth";
+import { getActiveUser, logoutUser, onAuthChange, PlacifyUser } from "@/lib/auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
@@ -50,14 +50,10 @@ function DashboardLayout() {
     }
   }, [user.role, pathname, navigate]);
 
-  const handleToggleRole = () => {
-    const nextRole = user.role === "admin" ? "student" : "admin";
-    const newUser = switchRole(nextRole);
-    setUser(newUser);
-    toast.success(`Switched mode to: ${newUser.role === "admin" ? "Placement Cell Administrator" : "Student View"}`);
-    if (newUser.role === "admin") {
-      navigate({ to: "/dashboard/admin/placements" });
-    }
+  const handleLogout = () => {
+    logoutUser();
+    toast.success("Signed out successfully.");
+    navigate({ to: "/login" });
   };
 
   // Dedicated navigation for Admin vs Student
@@ -148,7 +144,7 @@ function DashboardLayout() {
               })}
             </nav>
 
-            {/* Profile Card with Quick Role Switcher */}
+            {/* Profile Card & Active Session */}
             <div className="mt-4 rounded-2xl border border-border bg-card/60 p-3">
               <div className="flex items-center gap-3">
                 <div className={`grid h-10 w-10 place-items-center rounded-full text-sm font-bold text-white shrink-0 ${
@@ -169,18 +165,26 @@ function DashboardLayout() {
                   </div>
                   <div className="truncate text-[11px] text-muted-foreground">{user.title}</div>
                 </div>
-                <Link to="/login" className="grid h-8 w-8 place-items-center rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground shrink-0" aria-label="Logout">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="grid h-8 w-8 place-items-center rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
+                  aria-label="Logout"
+                >
                   <LogOut className="h-4 w-4" />
-                </Link>
+                </button>
               </div>
 
-              {/* Role Toggle Switch */}
-              <button
-                onClick={handleToggleRole}
-                className="mt-2.5 w-full rounded-xl border border-border bg-accent/30 hover:bg-accent/70 py-1.5 px-2 text-[10px] font-semibold text-primary transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <span>Switch to {user.role === "admin" ? "Student View" : "Admin View"}</span>
-              </button>
+              {/* Active Session Info & Logout */}
+              <div className="mt-2.5 flex items-center justify-between border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
+                <span className="font-semibold">{user.role === "admin" ? "Placement Officer" : "Candidate"}</span>
+                <button
+                  onClick={handleLogout}
+                  className="font-bold text-destructive hover:underline cursor-pointer flex items-center gap-1"
+                >
+                  <LogOut className="h-3 w-3" /> Sign Out
+                </button>
+              </div>
             </div>
           </div>
         </aside>
@@ -194,16 +198,13 @@ function DashboardLayout() {
               <Menu className="h-5 w-5" />
             </button>
             <div className="ml-auto flex items-center gap-2">
-              <button
-                onClick={handleToggleRole}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-border bg-card hover:bg-accent px-3 py-1.5 text-xs font-medium cursor-pointer"
-              >
-                <span className="text-muted-foreground">Mode:</span>
-                <span className={`font-bold ${user.role === "admin" ? "text-blue-500" : "text-emerald-500"}`}>
+              <div className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium">
+                <span className="text-muted-foreground">Active Role:</span>
+                <span className={`font-bold flex items-center gap-1 ${user.role === "admin" ? "text-blue-500" : "text-emerald-500"}`}>
+                  {user.role === "admin" ? <ShieldCheck className="h-3.5 w-3.5 text-blue-500" /> : <GraduationCap className="h-3.5 w-3.5 text-emerald-500" />}
                   {user.role === "admin" ? "Placement Admin" : "Student"}
                 </span>
-                <span className="text-[10px] text-primary underline ml-1">Switch</span>
-              </button>
+              </div>
               {user.role === "student" && (
                 <Link to="/dashboard/notifications" className="grid h-10 w-10 place-items-center rounded-xl border border-border hover:bg-accent" aria-label="Notifications">
                   <Bell className="h-4 w-4" />
