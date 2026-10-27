@@ -1,9 +1,11 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Briefcase, FileText, Search, ClipboardList, TrendingUp,
   Bell, Settings, User, Sparkles, Menu, X, LogOut, Wand2, ShieldCheck
 } from "lucide-react";
+import { getActiveUser, switchRole, onAuthChange, PlacifyUser } from "@/lib/auth";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -16,24 +18,6 @@ export const Route = createFileRoute("/dashboard")({
   }),
   component: DashboardLayout,
 });
-
-const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; badge?: string }[] = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/dashboard/admin/placements", label: "Placement Cell Admin", icon: ShieldCheck, badge: "Admin" },
-  { to: "/dashboard/jobs", label: "Recommended Jobs", icon: Briefcase },
-  { to: "/dashboard/personalizer", label: "Resume Personalizer", icon: Wand2 },
-  { to: "/dashboard/resume", label: "Resume", icon: FileText },
-  { to: "/dashboard/analyzer", label: "Resume Analyzer", icon: Search },
-  { to: "/dashboard/applications", label: "Applications", icon: ClipboardList },
-  { to: "/dashboard/skills", label: "Skill Tracker", icon: TrendingUp },
-  { to: "/dashboard/notifications", label: "Notifications", icon: Bell },
-  { to: "/dashboard/profile", label: "Profile", icon: User },
-  { to: "/dashboard/settings", label: "Settings", icon: Settings },
-];
-
-
-import { getActiveUser, switchRole, onAuthChange, PlacifyUser } from "@/lib/auth";
-import { toast } from "sonner";
 
 function DashboardLayout() {
   const [open, setOpen] = useState(false);
